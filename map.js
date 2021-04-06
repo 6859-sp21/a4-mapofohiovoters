@@ -35,6 +35,8 @@ async function createMap() {
             .on('click', function(e, d) {
                 isZoomed ? reset() : clicked(e, d, this)
             })
+            .on('mouseover', hoveringStart)
+            .on('mouseout', hoveringEnd)
             .attr('d', path);
 
     counties.append("title")
@@ -48,6 +50,15 @@ async function createMap() {
             d3.zoomTransform(svg.node()).invert([400, 400])
         )
         isZoomed = false;
+    }
+
+    function hoveringStart() {
+        counties.transition().style('opacity', null);
+        d3.select(this).transition().style('opacity', 0.5);
+    }
+
+    function hoveringEnd() {
+        counties.transition().style('opacity', null);
     }
 
     function clicked(event, d, obj) {
