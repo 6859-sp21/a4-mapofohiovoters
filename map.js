@@ -1,6 +1,9 @@
 async function createMap() {
-    const ohioCounties = await d3.json('./data/ohio_counties_full.geojson');
-    const projection = d3.geoEquirectangular().fitExtent([[0,0], [1000, 800]], ohioCounties);
+    const ohioCounties = await d3.json('./data/final_data.json');
+    const width = 1000;
+    const height = 800;
+
+    const projection = d3.geoEquirectangular().fitExtent([[0,0], [width, height]], ohioCounties);
     const path = d3.geoPath().projection(projection);
 
     var isZoomed = false;
@@ -11,13 +14,9 @@ async function createMap() {
 
     const svg = d3.select("#visualization-container")
         .append("svg")
-            .attr('width', 1000)
-            .attr('height', 800);
-        // .append('circle')
-        //     .attr('cx', 250)
-        //     .attr('cy', 250)
-        //     .attr('r', 20)
-        //     .attr('fill', 'blue');
+            .attr('width', width)
+            .attr('height', height);
+
     const g = svg.append('g')
         .attr('width', '100%')
         .attr('height', '100%');
@@ -47,7 +46,7 @@ async function createMap() {
         svg.transition().duration(750).call(
             zoom.transform,
             d3.zoomIdentity,
-            d3.zoomTransform(svg.node()).invert([400, 400])
+            d3.zoomTransform(svg.node()).invert([width / 2, height / 2])
         )
         isZoomed = false;
     }
@@ -69,8 +68,8 @@ async function createMap() {
         svg.transition().duration(750).call(
             zoom.transform,
             d3.zoomIdentity
-                .translate(400, 400)
-                .scale(Math.min(4, 0.9 / Math.max((x1 - x0) / 800, (y1 - y0) / 800)))
+                .translate(width / 2, height / 2)
+                .scale(Math.min(4, 0.9 / Math.max((x1 - x0) / width, (y1 - y0) / height)))
                 .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
             d3.pointer(event, svg.node())
         );
