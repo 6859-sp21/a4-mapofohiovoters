@@ -188,7 +188,6 @@ async function createMap() {
         .attr('stroke-opacity', 1);
 
     function reset() {
-        counties.transition().style('fill', null);
         svg1.transition().duration(750).call(
             zoom.transform,
             d3.zoomIdentity,
@@ -228,7 +227,6 @@ async function createMap() {
         const [[x0, y0], [x1, y1]] = path.bounds(d);
         event.stopPropagation();
         counties.transition().style("fill", null);
-        d3.select(obj).transition().style('fill', 'blue');
         svg1.transition().duration(750).call(
             zoom.transform,
             d3.zoomIdentity
