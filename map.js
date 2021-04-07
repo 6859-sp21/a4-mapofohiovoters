@@ -25,7 +25,7 @@ async function createMap() {
     var formatDateIntoYear = d3.timeFormat("%Y");
     var formatDate = d3.timeFormat("%b %Y");
 
-    // var margin = {top: 0, right: 50, bottom: 0, left: 50},
+    var margin = {top: 0, right: 50, bottom: 0, left: 50}
 
     var x = d3.scaleTime()
         .domain([startDate, endDate])
@@ -34,7 +34,7 @@ async function createMap() {
 
     var slider = svg.append("g")
         .attr("class", "slider")
-        // .attr("transform", "translate(" + margin.left + "," + height / 2 + ")");
+        .attr("transform", "translate(" + margin.left + "," + height  + ")");
 
     slider.append("line")
         .attr("class", "track")
@@ -52,9 +52,9 @@ async function createMap() {
             .on("start.interrupt", function () {
                 slider.interrupt();
             })
-            .on("start drag", function () {
+            .on("start drag", function (event) {
                 // update date/opacity
-                hue(x.invert(d3.event.x));
+                hue(x.invert(event.x));
             }));
 
     slider.insert("g", ".track-overlay")
@@ -89,6 +89,7 @@ async function createMap() {
         svg.style("background-color", d3.hsl(h / 1000000000, 0.8, 0.8));
     }
 
+    ///
 
     const ohio = svg.append('g')
         .attr('width', '100%')
@@ -151,7 +152,7 @@ async function createMap() {
 
     function zoomed(event) {
         const {transform} = event;
-        g.attr("transform", transform);
-        g.attr('stroke-width', 1 / transform.k);
+        ohio.attr("transform", transform);
+        ohio.attr('stroke-width', 1 / transform.k);
     }
 }
