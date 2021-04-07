@@ -291,7 +291,7 @@ async function createMap() {
         .data(ohioCounties.features)
         .join('text')
         .attr('x', (d) => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
-        .attr('y', (d, i) => i * barHeight + barHeight)
+        .attr('y', (d, i) => i * barHeight + barHeight - 2)
         .attr('dx', 5)
         .attr('fill', 'grey')
         .attr('font-size', 10)
