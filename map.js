@@ -188,10 +188,10 @@ async function createMap() {
         .attr('stroke-opacity', 1);
 
     function reset() {
-        svg1.transition().duration(750).call(
+        svg2.transition().duration(750).call(
             zoom.transform,
             d3.zoomIdentity,
-            d3.zoomTransform(svg1.node()).invert([width / 2, height / 2])
+            d3.zoomTransform(svg2.node()).invert([width / 2, height / 2])
         )
         isZoomed = false;
     }
@@ -227,13 +227,13 @@ async function createMap() {
         const [[x0, y0], [x1, y1]] = path.bounds(d);
         event.stopPropagation();
         counties.transition().style("fill", null);
-        svg1.transition().duration(750).call(
+        svg2.transition().duration(750).call(
             zoom.transform,
             d3.zoomIdentity
                 .translate(width / 2, height / 2)
                 .scale(Math.min(4, 0.9 / Math.max((x1 - x0) / width, (y1 - y0) / height)))
                 .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
-            d3.pointer(event, svg1.node())
+            d3.pointer(event, svg2.node())
         );
         isZoomed = true;
     }
@@ -243,4 +243,7 @@ async function createMap() {
         ohio.attr("transform", transform);
         ohio.attr('stroke-width', 1 / transform.k);
     }
+
+    // ----------- BAR CHART -----------
+
 }
