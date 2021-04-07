@@ -6,6 +6,10 @@ async function createMap() {
     let margin = {top: 50, right: 50, bottom: 100, left: 50};
     let moving = false;
 
+    //Used to access properties of what is currently being hovered so that tooltip
+    //html can be updated while playing
+    let hoveredProperties = {};
+
     let formatDateIntoYear = d3.timeFormat("%Y");
     let formatDate = date => {
         let dateString = d3.timeFormat("%m/%e/%Y")(date).replaceAll(/\s/g, '');
@@ -113,11 +117,13 @@ async function createMap() {
         .attr("r", 9);
 
     function updateDate(h) {
+        updateTooltip();
         handle.attr("cx", x(h));
         label
             .attr("x", x(h))
             .text(formatDate(h));
         counties.style('fill-opacity', d => cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name] / maxRegistrantsPerCapita)
+        // tooltip.html(d => {`<strong style="font-size: 16px;">${d.properties.name}</strong><br/>Population: <strong>${pop}</strong><br/># of Registered Voters: <strong>${registeredVoters}</strong><br/>Registered Voters per Capita: <strong>${perCapitaRegistrants}</strong>`});
     }
 
     // ----------- PLAY BUTTON -----------
@@ -200,17 +206,28 @@ async function createMap() {
         tooltip.transition()
             .duration(200)
             .style("opacity", 0.95);
-        const pop = countyPopulations[d.properties.name];
-        const registeredVoters = cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])];
-        const perCapitaRegistrants = (registeredVoters / pop).toFixed(3);
-        tooltip.html(`<strong style="font-size: 16px;">${d.properties.name}</strong><br/>Population: <strong>${pop}</strong><br/># of Registered Voters: <strong>${registeredVoters}</strong><br/>Registered Voters per Capita: <strong>${perCapitaRegistrants}</strong>`)
-            .style("left", `${event.pageX}px`)
+
+        hoveredProperties = d.properties;
+        updateTooltip();
+
+        tooltip.style("left", `${event.pageX}px`)
             .style('background', '#f5f6f7')
             .style("top", `${event.pageY}px`);
 
         d3.select(this)
             .attr("fill", 'black')
             .attr("stroke-width", 3)
+
+        d3.select(this)
+            .attr("fill", 'black')
+            .attr("stroke-width", 3)
+    }
+
+    function updateTooltip() {
+        const pop = countyPopulations[hoveredProperties.name];
+        const registeredVoters = cumulativeSumMap[hoveredProperties.name][formatDate(dates[currentDateIndex])];
+        const perCapitaRegistrants = (registeredVoters / pop).toFixed(3);
+        tooltip.html(`<strong style="font-size: 16px;">${hoveredProperties.name}</strong><br/>Population: <strong>${pop}</strong><br/># of Registered Voters: <strong>${registeredVoters}</strong><br/>Registered Voters per Capita: <strong>${perCapitaRegistrants}</strong>`);
     }
 
     function hoveringEnd() {
