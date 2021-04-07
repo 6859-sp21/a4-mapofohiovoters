@@ -267,12 +267,13 @@ async function createMap() {
     // ----------- BAR CHART -----------
     const barScale = d3.scaleLinear()
         .domain([0, 0.5])
-        .range([margin.left, width - margin.right])
+        .range([0, width/2 - margin.right])
         .nice();
+
 
     const svg3 = d3.select("#visualization-container")
         .append("svg")
-        .attr('width', width)
+        .attr('width', width/3)
         .attr('height', height);
 
     const bars = svg3.selectAll('rect')
@@ -285,14 +286,6 @@ async function createMap() {
         .style('fill', '#9f67fa')
         .style('stroke', 'white')
 
-    svg3.append('g')
-        .attr('transform', `translate(${-margin.left}, ${height})`)
-        .call(d3.axisBottom(barScale))
-        .append('text')
-            .attr('text-anchor', 'end')
-            .attr('fill', 'black')
-        .text('test')
-
     svg3.selectAll('text')
         .data(ohioCounties.features)
         .join('text')
@@ -300,4 +293,16 @@ async function createMap() {
         .attr('y', (d, i) => i * barHeight)
         .attr('fill', 'white')
         .text((d, i) => i)
+
+    svg3.append('g')
+        .attr('transform', `translate(0, ${height})`)
+        .call(d3.axisBottom(barScale))
+        .append('text')
+            .attr('text-anchor', 'end')
+            .attr('fill', 'black')
+        .attr('font-size', '12px')
+        .attr('font-weight', 'bold')
+        .attr('x', width/2 - margin.right)
+        .attr('y', -10)
+        .text('test')
 }
