@@ -127,6 +127,7 @@ async function createMap() {
             .text(formatDate(h));
         counties.style('fill-opacity', d => cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name] / maxRegistrantsPerCapita)
         bars.attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
+        barLabels.attr('x', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
     }
 
     // ----------- PLAY BUTTON -----------
@@ -286,13 +287,14 @@ async function createMap() {
         .style('fill', '#9f67fa')
         .style('stroke', 'white')
 
-    svg3.selectAll('text')
+    const barLabels = svg3.selectAll('text')
         .data(ohioCounties.features)
         .join('text')
-        .attr('x', 10)
-        .attr('y', (d, i) => i * barHeight)
-        .attr('fill', 'white')
-        .text((d, i) => i)
+        .attr('x', (d) => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
+        .attr('y', (d, i) => i * barHeight + barHeight)
+        .attr('dx', 5)
+        .attr('fill', 'grey')
+        .text((d, i) => d.properties.name)
 
     svg3.append('g')
         .attr('transform', `translate(0, ${height})`)
