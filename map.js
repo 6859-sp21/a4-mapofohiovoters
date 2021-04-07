@@ -278,7 +278,12 @@ async function createMap() {
         .attr('height', height);
 
     const bars = svg3.selectAll('rect')
-        .data(ohioCounties.features)
+        .data(ohioCounties.features.sort((x, y) => {
+            return d3.ascending(
+                x.properties.total_registrants / countyPopulations[x.properties.name],
+                y.properties.total_registrants / countyPopulations[y.properties.name]
+            )
+        }))
         .join('rect')
         .attr('x', 0)
         .attr('y', (d, i) => i * barHeight)
