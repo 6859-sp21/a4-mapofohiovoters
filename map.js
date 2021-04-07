@@ -174,7 +174,8 @@ async function createMap() {
     const svg2 = d3.select("#visualization-container")
         .append("svg")
         .attr('width', width)
-        .attr('height', height);
+        .attr('height', height)
+        .style('margin-right', "50px");
 
     const ohio = svg2.append('g');
 
