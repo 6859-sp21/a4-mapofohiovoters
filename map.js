@@ -1,13 +1,10 @@
 async function createMap() {
-    const ohioCounties = await d3.json('./data/final_data.json');
-    const countyPopulationsArray = await d3.csv('./data/population.csv');
-    const countyPopulations = {};
-    for (const data of countyPopulationsArray) {
-        countyPopulations[data.county] = data.population;
-    }
+
+    // ----------- CONSTANTS & HELPERS -----------
     const width = 1000;
     const height = 800;
     let margin = {top: 50, right: 50, bottom: 100, left: 50};
+    let moving = false;
 
     let formatDateIntoYear = d3.timeFormat("%Y");
     let formatDate = date => {
@@ -18,8 +15,17 @@ async function createMap() {
         return dateString
     }
 
+    let currentDateIndex = 0;
+    let isZoomed = false;
+
+    // ----------- DATA -----------
+    const ohioCounties = await d3.json('./data/final_data.json');
+    const countyPopulationsArray = await d3.csv('./data/population.csv');
+    const countyPopulations = {};
+    for (const data of countyPopulationsArray) {
+        countyPopulations[data.county] = data.population;
+    }
     let maxRegistrantsPerCapita = 0;
-    let moving = false;
 
     let dates = Object.keys(ohioCounties.features[0].properties.registrations).map(dateString => new Date(dateString));
     dates = dates.sort((a, b) => a - b);
@@ -38,21 +44,13 @@ async function createMap() {
             cumulativeSumMap[name][dateString] = total;
         }
     }
-
     const startDate = dates[0],
         endDate = dates[dates.length - 1];
-
-    let currentDateIndex = 0;
-
     const projection = d3.geoEquirectangular().fitExtent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]], ohioCounties);
     const path = d3.geoPath().projection(projection);
 
-    let isZoomed = false;
 
-    const zoom = d3.zoom()
-        .scaleExtent([1, 4])
-        .on('zoom', zoomed);
-
+    // ----------- SLIDER -----------
     const svg1 = d3.select("#visualization-container")
         .append("svg")
         .attr('width', width)
@@ -90,19 +88,19 @@ async function createMap() {
             }));
 
     slider.insert("g", ".track-overlay")
-            .attr("class", "ticks")
-            .attr("transform", "translate(0," + 18 + ")")
+        .attr("class", "ticks")
+        .attr("transform", "translate(0," + 18 + ")")
         .selectAll("text")
         .data(x.ticks(4))
         .enter()
         .append("text")
-            .attr("x", x)
-            .attr("y", 10)
-            .attr("text-anchor", "middle")
-            .attr("font-size", 16)
-            .text(function (d) {
-                return formatDateIntoYear(d);
-            })
+        .attr("x", x)
+        .attr("y", 10)
+        .attr("text-anchor", "middle")
+        .attr("font-size", 16)
+        .text(function (d) {
+            return formatDateIntoYear(d);
+        })
 
     let label = slider.append("text")
         .attr("class", "label")
@@ -122,11 +120,10 @@ async function createMap() {
         counties.style('fill-opacity', d => cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name] / maxRegistrantsPerCapita)
     }
 
-    ///
-
+    // ----------- PLAY BUTTON -----------
     const playButton = d3.select("#play-button");
     playButton
-        .on('click', function() {
+        .on('click', function () {
             const button = d3.select(this);
             if (button.text() === "Pause") {
                 moving = false;
@@ -150,7 +147,10 @@ async function createMap() {
         }
     }
 
-    ///
+    // ----------- MAP -----------
+    const zoom = d3.zoom()
+        .scaleExtent([1, 4])
+        .on('zoom', zoomed);
 
     const svg2 = d3.select("#visualization-container")
         .append("svg")
