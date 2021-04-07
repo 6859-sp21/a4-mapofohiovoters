@@ -2,11 +2,12 @@ async function createMap() {
     const ohioCounties = await d3.json('./data/final_data.json');
     const width = 1000;
     const height = 800;
+    var margin = {top: 50, right: 50, bottom: 100, left: 50};
 
     const startDate = new Date("2016-11-03"),
         endDate = new Date("2020-10-06");
 
-    const projection = d3.geoEquirectangular().fitExtent([[0, 0], [width, height]], ohioCounties);
+    const projection = d3.geoEquirectangular().fitExtent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]], ohioCounties);
     const path = d3.geoPath().projection(projection);
 
     var isZoomed = false;
@@ -25,16 +26,15 @@ async function createMap() {
     var formatDateIntoYear = d3.timeFormat("%Y");
     var formatDate = d3.timeFormat("%m/%d/%y");
 
-    var margin = {top: 0, right: 50, bottom: 0, left: 50}
 
     var x = d3.scaleTime()
         .domain([startDate, endDate])
-        .range([0, width])
+        .range([0, width - margin.right - margin.left])
         .clamp(true);
 
     var slider = svg.append("g")
         .attr("class", "slider")
-        .attr("transform", "translate(" + margin.left + "," + height  + ")");
+        .attr("transform", "translate(" + margin.left + "," + (height-50) + ")");
 
     slider.append("line")
         .attr("class", "track")
@@ -104,17 +104,13 @@ async function createMap() {
 
     ///
 
-    const ohio = svg.append('g')
-        .attr('width', '100%')
-        .attr('height', '100%');
+    const ohio = svg.append('g');
 
     const counties = ohio.append('g')
         .attr('stroke', '#f5f6f7')
         .attr('stroke-width', 1)
         .attr('fill', '#444')
         .attr('cursor', 'pointer')
-        .attr('width', '100%')
-        .attr('height', '100%')
         .selectAll('path')
         .data(ohioCounties.features)
         .join('path')
