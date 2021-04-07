@@ -16,7 +16,7 @@ async function createMap() {
     }
 
     let currentDateIndex = 0;
-    let isZoomed = false;
+    let isZoomed = "";
 
     // ----------- DATA -----------
     const ohioCounties = await d3.json('./data/final_data.json');
@@ -177,7 +177,7 @@ async function createMap() {
         .data(ohioCounties.features)
         .join('path')
         .on('click', function (e, d) {
-            isZoomed ? reset() : clicked(e, d, this)
+            (isZoomed === d.properties.geo_id) ? reset() : clicked(e, d, this)
         })
         .on('mouseover', hoveringStart)
         .on('mouseout', hoveringEnd)
@@ -235,7 +235,7 @@ async function createMap() {
                 .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
             d3.pointer(event, svg2.node())
         );
-        isZoomed = true;
+        isZoomed = d.properties.geo_id;
     }
 
     function zoomed(event) {
