@@ -1,8 +1,9 @@
 async function createMap() {
 
     // ----------- CONSTANTS & HELPERS -----------
-    const width = 1000;
-    const height = 800;
+    const width = 1200;
+    const height = 900;
+    const barHeight = 10;
     let margin = {top: 50, right: 50, bottom: 100, left: 50};
     let moving = false;
 
@@ -55,7 +56,7 @@ async function createMap() {
 
 
     // ----------- SLIDER -----------
-    const svg1 = d3.select("#visualization-container")
+    const svg1 = d3.select("#slider-container")
         .append("svg")
         .attr('width', width)
         .attr('height', 100);
@@ -123,6 +124,8 @@ async function createMap() {
             .attr("x", x(h))
             .text(formatDate(h));
         counties.style('fill-opacity', d => cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name] / maxRegistrantsPerCapita)
+        bars.attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
+
         // tooltip.html(d => {`<strong style="font-size: 16px;">${d.properties.name}</strong><br/>Population: <strong>${pop}</strong><br/># of Registered Voters: <strong>${registeredVoters}</strong><br/>Registered Voters per Capita: <strong>${perCapitaRegistrants}</strong>`});
     }
 
@@ -262,5 +265,39 @@ async function createMap() {
     }
 
     // ----------- BAR CHART -----------
+    const barScale = d3.scaleLinear()
+        .domain([0, 0.5])
+        .range([margin.left, width - margin.right])
+        .nice();
 
+    const svg3 = d3.select("#visualization-container")
+        .append("svg")
+        .attr('width', width)
+        .attr('height', height);
+
+    const bars = svg3.selectAll('rect')
+        .data(ohioCounties.features)
+        .join('rect')
+        .attr('x', 0)
+        .attr('y', (d, i) => i * barHeight)
+        .attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
+        .attr('height', barHeight)
+        .style('fill', '#9f67fa')
+        .style('stroke', 'white')
+
+    svg3.append('g')
+        .attr('transform', `translate(${-margin.left}, ${height})`)
+        .call(d3.axisBottom(barScale))
+        .append('text')
+            .attr('text-anchor', 'end')
+            .attr('fill', 'black')
+        .text('test')
+
+    svg3.selectAll('text')
+        .data(ohioCounties.features)
+        .join('text')
+        .attr('x', 10)
+        .attr('y', (d, i) => i * barHeight)
+        .attr('fill', 'white')
+        .text((d, i) => i)
 }

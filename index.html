@@ -38,6 +38,14 @@
 
     #visualization-container {
         display: flex;
+        flex-direction: row;
+        align-items: center;
+        padding: 30px;
+        width: 100%;
+    }
+
+    #slider-container {
+        display: flex;
         flex-direction: column;
         align-items: center;
         padding: 30px;
@@ -99,8 +107,11 @@
         Voter Registration in Ohio
     </h1>
     <br/>
-    <div id="visualization-container">
-        <button id="play-button">Play</button>
+    <div>
+        <div id="slider-container">
+            <button id="play-button">Play</button>
+        </div>
+        <div id="visualization-container"></div>
     </div>
 </div>
 </body>
