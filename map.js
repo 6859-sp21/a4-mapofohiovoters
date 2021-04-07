@@ -23,7 +23,7 @@ async function createMap() {
     ///
 
     var formatDateIntoYear = d3.timeFormat("%Y");
-    var formatDate = d3.timeFormat("%b %Y");
+    var formatDate = d3.timeFormat("%m/%d/%y");
 
     var margin = {top: 0, right: 50, bottom: 0, left: 50}
 
@@ -54,6 +54,7 @@ async function createMap() {
             })
             .on("start drag", function (event) {
                 // update date/opacity
+                // updateData(x.invert(event.x));
                 hue(x.invert(event.x));
             }));
 
@@ -80,6 +81,18 @@ async function createMap() {
     var handle = slider.insert("circle", ".track-overlay")
         .attr("class", "handle")
         .attr("r", 9);
+
+    function updateData(h) {
+        // input h: current date at which the slider is on
+        var newData = dataset.filter(function(d) {
+            return d.date < h
+        })
+        renderCounties(newData)
+    }
+
+    function renderCounties(data) {
+        // re-render counties with updated data selection
+    }
 
     function hue(h) {
         handle.attr("cx", x(h));
