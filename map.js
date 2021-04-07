@@ -2,7 +2,7 @@ async function createMap() {
 
     // ----------- CONSTANTS & HELPERS -----------
     const width = 1200;
-    const height = 900;
+    const height = 920;
     const barHeight = 10;
     let margin = {top: 50, right: 50, bottom: 100, left: 50};
     let moving = false;
@@ -268,13 +268,13 @@ async function createMap() {
     // ----------- BAR CHART -----------
     const barScale = d3.scaleLinear()
         .domain([0, 0.5])
-        .range([0, width/2 - margin.right])
+        .range([0, width / 2 - margin.right])
         .nice();
 
 
     const svg3 = d3.select("#visualization-container")
         .append("svg")
-        .attr('width', width/3)
+        .attr('width', width / 2)
         .attr('height', height);
 
     const bars = svg3.selectAll('rect')
@@ -294,17 +294,26 @@ async function createMap() {
         .attr('y', (d, i) => i * barHeight + barHeight)
         .attr('dx', 5)
         .attr('fill', 'grey')
-        .text((d, i) => d.properties.name)
+        .attr('font-size', 10)
+        .text(d => d.properties.name)
 
     svg3.append('g')
-        .attr('transform', `translate(0, ${height})`)
+        .attr('transform', `translate(0, ${height - 20})`)
         .call(d3.axisBottom(barScale))
         .append('text')
-            .attr('text-anchor', 'end')
-            .attr('fill', 'black')
-        .attr('font-size', '12px')
+        .attr('text-anchor', 'end')
+        .attr('fill', 'black')
+        .attr('font-size', '14px')
         .attr('font-weight', 'bold')
-        .attr('x', width/2 - margin.right)
+        .attr('x', width / 2)
         .attr('y', -10)
-        .text('test')
+        .text('% of population registered')
+
+    svg3.append('text')
+        .attr('transform', `translate(${width / 2 - margin.right}, ${height / 2 - 30}) rotate(90)`)
+        .attr('text-anchor', 'center')
+        .attr('fill', 'black')
+        .attr('font-size', '16px')
+        .attr('font-weight', 'bold')
+        .text('Counties')
 }
