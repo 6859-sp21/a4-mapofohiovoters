@@ -131,6 +131,9 @@ async function createMap() {
                 button.text("Play");
             } else {
                 moving = true;
+                if (currentDateIndex === dates.length) {
+                    currentDateIndex = 0;
+                }
                 timer = setInterval(step, 5);
                 button.text("Pause");
             }
@@ -141,11 +144,17 @@ async function createMap() {
         currentDateIndex++;
         if (currentDateIndex >= dates.length) {
             moving = false;
-            currentDateIndex = 0;
+            currentDateIndex = dates.length - 1;
             clearInterval(timer);
             playButton.text("Play");
         }
     }
+
+    // ----------- TOOLTIP -----------
+    const tooltip = d3.select("body")
+        .append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
 
     // ----------- MAP -----------
     const zoom = d3.zoom()
@@ -178,9 +187,6 @@ async function createMap() {
         })
         .attr('stroke-opacity', 1);
 
-    counties.append("title")
-        .text(d => d.properties.name);
-
     function reset() {
         counties.transition().style('fill', null);
         svg1.transition().duration(750).call(
@@ -191,13 +197,31 @@ async function createMap() {
         isZoomed = false;
     }
 
-    function hoveringStart() {
-        counties.transition().style('fill', null);
-        d3.select(this).transition().style('fill', "#5C7FEC");
+    function hoveringStart(event, d) {
+        tooltip.transition()
+            .duration(200)
+            .style("opacity", 0.95);
+        const pop = countyPopulations[d.properties.name];
+        const registeredVoters = cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])];
+        const perCapitaRegistrants = (registeredVoters / pop).toFixed(3);
+        tooltip.html(`<strong style="font-size: 16px;">${d.properties.name}</strong><br/>Population: <strong>${pop}</strong><br/># of Registered Voters: <strong>${registeredVoters}</strong><br/>Registered Voters per Capita: <strong>${perCapitaRegistrants}</strong>`)
+            .style("left", `${event.pageX}px`)
+            .style('background', '#f5f6f7')
+            .style("top", `${event.pageY}px`);
+
+        d3.select(this)
+            .attr("fill", 'black')
+            .attr("stroke-width", 3)
     }
 
     function hoveringEnd() {
-        counties.transition().style('fill', null);
+        tooltip.transition()
+            .duration(200)
+            .style("opacity", 0);
+
+        d3.select(this)
+            .attr('fill', null)
+            .attr('stroke-width', null);
     }
 
     function clicked(event, d, obj) {
