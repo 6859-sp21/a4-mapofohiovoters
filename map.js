@@ -1,7 +1,7 @@
 async function createMap() {
 
     // ----------- CONSTANTS & HELPERS -----------
-    const width = 1200;
+    const width = 800;
     const height = 920;
     const barHeight = 10;
     let margin = {top: 50, right: 50, bottom: 100, left: 50};
@@ -127,6 +127,7 @@ async function createMap() {
             .text(formatDate(h));
         counties.style('fill-opacity', d => cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name] / maxRegistrantsPerCapita)
         bars.attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
+        // bars.style('fill-opacity', d => cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name] / maxRegistrantsPerCapita)
         barLabels.attr('x', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
     }
 
@@ -291,6 +292,7 @@ async function createMap() {
         .attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
         .attr('height', barHeight)
         .style('fill', '#9f67fa')
+        // .style('fill-opacity', d => cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name] / maxRegistrantsPerCapita)
         .style('stroke', 'white')
 
     const barLabels = svg3.selectAll('text')
@@ -312,7 +314,7 @@ async function createMap() {
         .attr('font-size', '14px')
         .attr('font-weight', 'bold')
         .attr('x', width / 2)
-        .attr('y', -10)
+        .attr('y', -6)
         .text('% of population registered')
 
     svg3.append('text')
