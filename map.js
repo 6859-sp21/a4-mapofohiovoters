@@ -131,7 +131,7 @@ async function createMap() {
                 button.text("Play");
             } else {
                 moving = true;
-                if (currentDateIndex === dates.length) {
+                if (currentDateIndex === dates.length - 1) {
                     currentDateIndex = 0;
                 }
                 timer = setInterval(step, 5);
