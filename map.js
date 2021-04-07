@@ -9,7 +9,7 @@ async function createMap() {
 
     //Used to access properties of what is currently being hovered so that tooltip
     //html can be updated while playing
-    let hoveredProperties = {};
+    let hoveredProperties = null;
 
     let formatDateIntoYear = d3.timeFormat("%Y");
     let formatDate = date => {
@@ -118,15 +118,15 @@ async function createMap() {
         .attr("r", 9);
 
     function updateDate(h) {
-        updateTooltip();
+        if (hoveredProperties != null) {
+            updateTooltip();
+        }
         handle.attr("cx", x(h));
         label
             .attr("x", x(h))
             .text(formatDate(h));
         counties.style('fill-opacity', d => cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name] / maxRegistrantsPerCapita)
         bars.attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
-
-        // tooltip.html(d => {`<strong style="font-size: 16px;">${d.properties.name}</strong><br/>Population: <strong>${pop}</strong><br/># of Registered Voters: <strong>${registeredVoters}</strong><br/>Registered Voters per Capita: <strong>${perCapitaRegistrants}</strong>`});
     }
 
     // ----------- PLAY BUTTON -----------
