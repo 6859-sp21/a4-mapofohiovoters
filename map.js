@@ -19,6 +19,7 @@ async function createMap() {
     }
 
     let maxRegistrantsPerCapita = 0;
+    let moving = false;
 
     let dates = Object.keys(ohioCounties.features[0].properties.registrations).map(dateString => new Date(dateString));
     dates = dates.sort((a, b) => a - b);
@@ -38,8 +39,10 @@ async function createMap() {
         }
     }
 
-    const startDate = new Date("2016-11-09"),
-        endDate = new Date("2020-10-06");
+    const startDate = dates[0],
+        endDate = dates[dates.length - 1];
+
+    let currentDateIndex = 0;
 
     const projection = d3.geoEquirectangular().fitExtent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]], ohioCounties);
     const path = d3.geoPath().projection(projection);
@@ -81,7 +84,9 @@ async function createMap() {
                 slider.interrupt();
             })
             .on("start drag", function (event) {
-                updateDate(x.invert(event.x));
+                const date = x.invert(event.x);
+                currentDateIndex = dates.findIndex(value => value.getDate() === date.getDate() && value.getMonth() === date.getMonth() && value.getFullYear() === date.getFullYear());
+                updateDate(date);
             }));
 
     slider.insert("g", ".track-overlay")
@@ -119,6 +124,34 @@ async function createMap() {
 
     ///
 
+    const playButton = d3.select("#play-button");
+    playButton
+        .on('click', function() {
+            const button = d3.select(this);
+            if (button.text() === "Pause") {
+                moving = false;
+                clearInterval(timer);
+                button.text("Play");
+            } else {
+                moving = true;
+                timer = setInterval(step, 5);
+                button.text("Pause");
+            }
+        })
+
+    function step() {
+        updateDate(dates[currentDateIndex]);
+        currentDateIndex++;
+        if (currentDateIndex >= dates.length) {
+            moving = false;
+            currentDateIndex = 0;
+            clearInterval(timer);
+            playButton.text("Play");
+        }
+    }
+
+    ///
+
     const svg2 = d3.select("#visualization-container")
         .append("svg")
         .attr('width', width)
@@ -128,7 +161,7 @@ async function createMap() {
 
     const counties = ohio.append('g')
         .attr('stroke', '#444')
-        .attr('stroke-width', 1)
+        .attr('stroke-width', 1.5)
         .attr('fill', '#9f67fa')
         .attr('cursor', 'pointer')
         .selectAll('path')

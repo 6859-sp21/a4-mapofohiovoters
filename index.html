@@ -34,48 +34,64 @@
 </style>
 <style>
     .ticks {
-      font-size: 10px;
+        font-size: 10px;
     }
 
     .track,
     .track-inset,
     .track-overlay {
-      stroke-linecap: round;
+        stroke-linecap: round;
     }
 
     .track {
-      stroke: #000;
-      stroke-opacity: 0.3;
-      stroke-width: 10px;
+        stroke: #000;
+        stroke-opacity: 0.3;
+        stroke-width: 10px;
 
     }
 
     .track-inset {
-      stroke: #ddd;
-      stroke-width: 8px;
+        stroke: #ddd;
+        stroke-width: 8px;
     }
 
     .track-overlay {
-      pointer-events: stroke;
-      stroke-width: 50px;
-      stroke: transparent;
-      cursor: crosshair;
+        pointer-events: stroke;
+        stroke-width: 50px;
+        stroke: transparent;
+        cursor: pointer;
     }
 
     .handle {
-      fill: #fff;
-      stroke: #000;
-      stroke-opacity: 0.5;
-      stroke-width: 1.25px;
+        fill: #fff;
+        stroke: #000;
+        stroke-opacity: 0.5;
+        stroke-width: 1.25px;
     }
-  </style>
+
+    button {
+        padding: 8px 16px;
+        background-color: #9f67fa88;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #9f67fa;
+        color: white;
+    }
+
+</style>
 <body>
 <div class="container">
     <h1>
         Voter Registration in Ohio
     </h1>
     <br/>
-    <div id="visualization-container"></div>
+    <div id="visualization-container">
+        <button id="play-button">Play</button>
+    </div>
 </div>
 </body>
 <script src="https://d3js.org/d3.v6.min.js"></script>
