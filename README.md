@@ -7,7 +7,7 @@ Interactive animated visualization of Ohio voter registration by county from the
 - Re-Preprocess county-based dataset
     - Aggregate registration data pre-2016
     - Add political parties information
-    - Add missing dates
+    - Add missing dates -> watch for date formatting
     
 - Create city-based dataset
     - Preprocessing:
