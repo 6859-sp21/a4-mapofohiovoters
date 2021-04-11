@@ -25,6 +25,7 @@ async function createMap() {
 
     // ----------- DATA -----------
     const ohioCounties = await d3.json('./data/final_data.json');
+    const ohioCities = await d3.json('./data/ohio_cities.geojson')
     const countyPopulationsArray = await d3.csv('./data/population.csv');
     const countyPopulations = {};
     for (const data of countyPopulationsArray) {
@@ -189,15 +190,21 @@ async function createMap() {
         .data(ohioCounties.features)
         .join('path')
         .on('click', function (e, d) {
-            (isZoomed === d.properties.geo_id) ? reset() : clicked(e, d, this)
+            (isZoomed === d.properties.name) ? reset() : clicked(e, d, this)
         })
-        .on('mouseover', hoveringStart)
-        .on('mouseout', hoveringEnd)
+        .on('mouseover', hoveringCountyStart)
+        .on('mouseout', hoveringCountyEnd)
         .attr('d', path)
         .attr('fill-opacity', d => {
             return cumulativeSumMap[d.properties.name][formatDate(startDate)] / countyPopulations[d.properties.name] / maxRegistrantsPerCapita;
         })
         .attr('stroke-opacity', 1);
+
+    const cities = ohio.append('g')
+        .attr('stroke', 'none')
+        .attr('fill-opacity', 0.6)
+        .attr('fill', 'black')
+        .attr('cursor', 'pointer')
 
     function reset() {
         svg2.transition().duration(750).call(
@@ -205,10 +212,13 @@ async function createMap() {
             d3.zoomIdentity,
             d3.zoomTransform(svg2.node()).invert([width / 2, height / 2])
         )
-        isZoomed = false;
+        cities.selectAll('path')
+            .data([])
+            .join('path')
+        isZoomed = "";
     }
 
-    function hoveringStart(event, d) {
+    function hoveringCityStart(event, d) {
         tooltip.transition()
             .duration(200)
             .style("opacity", 0.95);
@@ -221,22 +231,47 @@ async function createMap() {
             .style("top", `${event.pageY}px`);
 
         d3.select(this)
-            .attr("fill", 'black')
-            .attr("stroke-width", 3)
+            .attr('fill-opacity', 0.9)
+    }
+
+    function hoveringCountyStart(event, d) {
+        tooltip.transition()
+            .duration(200)
+            .style("opacity", 0.95);
+
+        hoveredProperties = d.properties;
+        updateTooltip();
+
+        tooltip.style("left", `${event.pageX}px`)
+            .style('background', '#f5f6f7')
+            .style("top", `${event.pageY}px`);
 
         d3.select(this)
-            .attr("fill", 'black')
-            .attr("stroke-width", 3)
+            .attr("fill", '#da8601')
+            .attr("stroke-width", 2.5)
     }
 
     function updateTooltip() {
-        const pop = countyPopulations[hoveredProperties.name];
-        const registeredVoters = cumulativeSumMap[hoveredProperties.name][formatDate(dates[currentDateIndex])];
-        const perCapitaRegistrants = (registeredVoters / pop).toFixed(3);
-        tooltip.html(`<strong style="font-size: 16px;">${hoveredProperties.name}</strong><br/>Population: <strong>${pop}</strong><br/># of Registered Voters: <strong>${registeredVoters}</strong><br/>Registered Voters per Capita: <strong>${perCapitaRegistrants}</strong>`);
+        if (hoveredProperties.lsad === 'County') {
+            const pop = countyPopulations[hoveredProperties.name];
+            const registeredVoters = cumulativeSumMap[hoveredProperties.name][formatDate(dates[currentDateIndex])];
+            const perCapitaRegistrants = (100 * registeredVoters / pop).toFixed(3);
+            tooltip.html(`<strong style="font-size: 16px;">${hoveredProperties.name}</strong><br/>Population: <strong>${pop}</strong><br/># of Registered Voters: <strong>${registeredVoters}</strong><br/>% of Pop Registered: <strong>${perCapitaRegistrants}%</strong>`);
+        } else {
+            tooltip.html(`<strong style="font-size: 16px;">${hoveredProperties.name}</strong>`);
+        }
     }
 
-    function hoveringEnd() {
+    function hoveringCityEnd() {
+        tooltip.transition()
+            .duration(200)
+            .style("opacity", 0);
+
+        d3.select(this)
+            .attr('fill-opacity', null);
+    }
+
+    function hoveringCountyEnd() {
         tooltip.transition()
             .duration(200)
             .style("opacity", 0);
@@ -258,7 +293,13 @@ async function createMap() {
                 .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
             d3.pointer(event, svg2.node())
         );
-        isZoomed = d.properties.geo_id;
+        isZoomed = d.properties.name;
+        cities.selectAll('path')
+            .data(ohioCities.features.filter(city => city.properties.county === d.properties.name))
+            .join('path')
+            .attr('d', path)
+            .on('mouseover', hoveringCityStart)
+            .on('mouseout', hoveringCityEnd)
     }
 
     function zoomed(event) {
@@ -269,7 +310,7 @@ async function createMap() {
 
     // ----------- BAR CHART -----------
     const barScale = d3.scaleLinear()
-        .domain([0, 0.5])
+        .domain([0, 0.4])
         .range([0, width / 2 - margin.right])
         .nice();
 
@@ -281,7 +322,7 @@ async function createMap() {
 
     const bars = svg3.selectAll('rect')
         .data(ohioCounties.features.sort((x, y) => {
-            return d3.ascending(
+            return d3.descending(
                 x.properties.total_registrants / countyPopulations[x.properties.name],
                 y.properties.total_registrants / countyPopulations[y.properties.name]
             )
@@ -292,28 +333,28 @@ async function createMap() {
         .attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
         .attr('height', barHeight)
         .style('fill', '#9f67fa')
-        // .style('fill-opacity', d => cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name] / maxRegistrantsPerCapita)
-        .style('stroke', 'white')
+        .attr('transform', 'translate(5, 0)')
+        .style('stroke', '#f5f6f7')
 
     const barLabels = svg3.selectAll('text')
         .data(ohioCounties.features)
         .join('text')
         .attr('x', (d) => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
         .attr('y', (d, i) => i * barHeight + barHeight - 2)
-        .attr('dx', 5)
+        .attr('dx', 10)
         .attr('fill', 'grey')
         .attr('font-size', 10)
         .text(d => d.properties.name)
 
     svg3.append('g')
-        .attr('transform', `translate(0, ${height - 20})`)
-        .call(d3.axisBottom(barScale))
+        .attr('transform', `translate(5, ${height - 20})`)
+        .call(d3.axisBottom(barScale).tickFormat(d => d * 100))
         .append('text')
         .attr('text-anchor', 'end')
         .attr('fill', 'black')
         .attr('font-size', '14px')
         .attr('font-weight', 'bold')
-        .attr('x', width / 2)
+        .attr('x', width / 2 - 5)
         .attr('y', -6)
         .text('% of population registered')
 
