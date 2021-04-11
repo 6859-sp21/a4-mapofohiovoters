@@ -20,10 +20,10 @@ Interactive animated visualization of Ohio voter registration by county from the
     - Visualize cities via point embeddings upon zoom in to counties
         - Potential embedding: change size of point based on rate of registration?
     
-- Change bar chart to rate-based
-    - Only visualize the top/bottom 5
-    - Potentially do a 'bar chart race'-type graph
-    - Live line graph showcasing rate of cities in selected county?
+- Change bar chart to Dashboard
+    - Top 5 absolute registered counties (bar chart race?)
+    - Top 5 per capita registered counties
+    - Potentially include 'spedometer' for county selected for rate of registrations
 
 *(look at after large changes)*
 **Small Priorities of Work:**
