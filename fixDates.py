@@ -5,13 +5,13 @@ import csv
 import json
 
 countyMap = dict()
-with open('county_codes.csv', mode='r') as infile:
+with open('data/county_codes.csv', mode='r') as infile:
     reader = csv.reader(infile)
     for i, row in enumerate(reader):
         if i == 0:
             continue
         countyMap[str(row[1])] = row[0]
-df = pd.read_csv('numRegByCounty.csv', parse_dates=['REGISTRATION_DATE'], infer_datetime_format=True)
+df = pd.read_csv('data/numRegByCounty.csv', parse_dates=['REGISTRATION_DATE'], infer_datetime_format=True)
 df = df.fillna(0)
 df.rename(columns=countyMap, inplace=True)  # convert county names
 pre16 = df[(df['REGISTRATION_DATE'] <= np.datetime64('2016-11-08'))]
@@ -22,7 +22,7 @@ cumulative['REGISTRATION_DATE'] = np.datetime64('2016-11-08')
 post16 = post16.append(cumulative, ignore_index=True, sort=True)
 post16 = post16.sort_values('REGISTRATION_DATE')  # resort
 post16.set_index('REGISTRATION_DATE', inplace=True)
-with open('final_data.json', 'r') as file:
+with open('data/final_data.json', 'r') as file:
     original_json = json.load(file)
 
 for i in range(len(original_json['features'])):
@@ -36,5 +36,5 @@ for i in range(len(original_json['features'])):
     original_json['features'][i]["properties"]["total_registrants"] = total_registrants[county]
 
 print(original_json['features'][0]["properties"])
-with open('final_data_new.json', 'w') as file:
+with open('data/final_data_new.json', 'w') as file:
     json.dump(original_json, file)

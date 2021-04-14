@@ -141,7 +141,7 @@ async function createMap() {
             .text(formatDate(h));
         counties.style('fill-opacity', d => calculateOpacity(formatDate(h), d.properties.name))
         bars.attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
-        // bars.style('fill-opacity', d => cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name] / maxRegistrantsPerCapita)
+        bars.style('fill-opacity', d => calculateOpacity(formatDate(h), d.properties.name))
         barLabels.attr('x', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
     }
 
@@ -409,6 +409,7 @@ async function createMap() {
         .attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
         .attr('height', barHeight)
         .style('fill', '#9f67fa')
+        .style('fill-opacity', d => calculateOpacity(formatDate(startDate), d.properties.name))
         .attr('transform', 'translate(5, 0)')
         .style('stroke', '#f5f6f7')
 
