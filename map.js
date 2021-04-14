@@ -189,9 +189,6 @@ async function createMap() {
         .selectAll('path')
         .data(ohioCounties.features)
         .join('path')
-        .on('click', function (e, d) {
-            (isZoomed === d.properties.name) ? reset() : clicked(e, d, this)
-        })
         .on('mouseover', hoveringCountyStart)
         .on('mouseout', hoveringCountyEnd)
         .attr('d', path)
@@ -199,12 +196,75 @@ async function createMap() {
             return cumulativeSumMap[d.properties.name][formatDate(startDate)] / countyPopulations[d.properties.name] / maxRegistrantsPerCapita;
         })
         .attr('stroke-opacity', 1);
-
+    
+    
     const cities = ohio.append('g')
-        .attr('stroke', 'none')
-        .attr('fill-opacity', 0.6)
-        .attr('fill', 'black')
-        .attr('cursor', 'pointer')
+    .attr('stroke', 'none')
+    .attr('fill-opacity', 0.6)
+    .attr('fill', 'black')
+    .attr('cursor', 'pointer')
+
+    function clickcancel() {
+        // we want to a distinguish single/double click
+        // details http://bl.ocks.org/couchand/6394506
+        var dispatcher = d3.dispatch('click', 'dblclick');
+        function cc(selection) {
+            var down, tolerance = 5, last, wait = null, args;
+            // euclidean distance
+            function dist(a, b) {
+                return Math.sqrt(Math.pow(a[0] - b[0], 2), Math.pow(a[1] - b[1], 2));
+            }
+            selection.on('mousedown', function() {
+                down = d3.pointer(document.body);
+                last = +new Date();
+                args = arguments;
+            });
+            selection.on('mouseup', function() {
+                if (dist(down, d3.pointer(document.body)) > tolerance) {
+                    return;
+                } else {
+                    if (wait) {
+                        window.clearTimeout(wait);
+                        wait = null;
+                        dispatcher.apply("dblclick", this, args);
+                    } else {
+                        wait = window.setTimeout((function() {
+                            return function() {
+                                dispatcher.apply("click", this, args);
+                                wait = null;
+                            };
+                        })(), 300);
+                    }
+                }
+            });
+        };
+        // Copies a variable number of methods from source to target.
+        var d3rebind = function(target, source) {
+            var i = 1, n = arguments.length, method;
+            while (++i < n) target[method = arguments[i]] = d3_rebind(target, source, source[method]);
+            return target;
+        };
+        
+        // Method is assumed to be a standard D3 getter-setter:
+        // If passed with no arguments, gets the value.
+        // If passed with arguments, sets the value and returns the target.
+        function d3_rebind(target, source, method) {
+            return function() {
+            var value = method.apply(source, arguments);
+            return value === source ? target : value;
+            };
+        }
+        return d3rebind(cc, dispatcher, 'on');
+    }
+    const cc = clickcancel();
+    counties.call(cc);
+    cities.call(cc);
+    cc.on('click', function (e, d) {
+        (isZoomed === d.properties.name) ? reset() : clicked(e, d, this)
+    })
+    cc.on('dblclick', function() {
+        console.log('DOUBLE CLICK');
+    });
 
     function reset() {
         svg2.transition().duration(750).call(
