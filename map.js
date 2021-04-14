@@ -402,8 +402,8 @@ async function createMap() {
                 x.properties.total_registrants / countyPopulations[x.properties.name],
                 y.properties.total_registrants / countyPopulations[y.properties.name]
             )
-        }))
-        .join('rect')
+        }).slice(0, 10)) //Should eventually change with the number of counties / cities that we want to show
+        .join('rect') //Same with the positioning of the labels rather than hardcoded pixels
         .attr('x', 0)
         .attr('y', (d, i) => i * barHeight)
         .attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
@@ -413,7 +413,7 @@ async function createMap() {
         .style('stroke', '#f5f6f7')
 
     const barLabels = svg3.selectAll('text')
-        .data(ohioCounties.features)
+        .data(ohioCounties.features.slice(0,10))
         .join('text')
         .attr('x', (d) => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
         .attr('y', (d, i) => i * barHeight + barHeight - 2)
@@ -423,19 +423,19 @@ async function createMap() {
         .text(d => d.properties.name)
 
     svg3.append('g')
-        .attr('transform', `translate(5, ${height - 20})`)
+        .attr('transform', `translate(5, ${barHeight*12 - 20})`) // Control translation of % pop
         .call(d3.axisBottom(barScale).tickFormat(d => d * 100))
         .append('text')
-        .attr('text-anchor', 'end')
+        // .attr('text-anchor', 'end')
         .attr('fill', 'black')
         .attr('font-size', '14px')
         .attr('font-weight', 'bold')
-        .attr('x', width / 2 - 5)
-        .attr('y', -6)
+        .attr('x', width / 4.5 - 5) //Controls x start of % pop
+        .attr('y', 30) //Controls y location relative to translate above
         .text('% of population registered')
 
     svg3.append('text')
-        .attr('transform', `translate(${width / 2 - margin.right}, ${height / 2 - 30}) rotate(90)`)
+        .attr('transform', `translate(${width / 2 - margin.right}, ${10}) rotate(90)`)
         .attr('text-anchor', 'center')
         .attr('fill', 'black')
         .attr('font-size', '16px')
