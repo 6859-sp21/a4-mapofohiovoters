@@ -143,9 +143,9 @@ async function createMap() {
             .attr("x", x(h))
             .text(formatDate(h));
         counties.style('fill-opacity', d => calculateOpacity(formatDate(h), d.properties.name))
-        bars.attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
-        bars.style('fill-opacity', d => calculateOpacity(formatDate(h), d.properties.name))
-        barLabels.attr('x', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
+        percentageBars.attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
+        percentageBars.style('fill-opacity', d => calculateOpacity(formatDate(h), d.properties.name))
+        // percentageBarLabels.attr('x', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
     }
 
     // ----------- PLAY BUTTON -----------
@@ -215,27 +215,30 @@ async function createMap() {
 
 
     const cities = ohio.append('g')
-    .attr('stroke', 'none')
-    .attr('fill-opacity', 0.6)
-    .attr('fill', 'black')
-    .attr('cursor', 'pointer')
+        .attr('stroke', 'none')
+        .attr('fill-opacity', 0.6)
+        .attr('fill', 'black')
+        .attr('cursor', 'pointer')
 
     function clickcancel() {
         // we want to a distinguish single/double click
         // details http://bl.ocks.org/couchand/6394506
         var dispatcher = d3.dispatch('click', 'dblclick');
+
         function cc(selection) {
             var down, tolerance = 5, last, wait = null, args;
+
             // euclidean distance
             function dist(a, b) {
                 return Math.sqrt(Math.pow(a[0] - b[0], 2), Math.pow(a[1] - b[1], 2));
             }
-            selection.on('mousedown', function() {
+
+            selection.on('mousedown', function () {
                 down = d3.pointer(document.body);
                 last = +new Date();
                 args = arguments;
             });
-            selection.on('mouseup', function() {
+            selection.on('mouseup', function () {
                 if (dist(down, d3.pointer(document.body)) > tolerance) {
                     return;
                 } else {
@@ -244,8 +247,8 @@ async function createMap() {
                         wait = null;
                         dispatcher.apply("dblclick", this, args);
                     } else {
-                        wait = window.setTimeout((function() {
-                            return function() {
+                        wait = window.setTimeout((function () {
+                            return function () {
                                 dispatcher.apply("click", this, args);
                                 wait = null;
                             };
@@ -253,9 +256,10 @@ async function createMap() {
                     }
                 }
             });
-        };
+        }
+
         // Copies a variable number of methods from source to target.
-        var d3rebind = function(target, source) {
+        var d3rebind = function (target, source) {
             var i = 1, n = arguments.length, method;
             while (++i < n) target[method = arguments[i]] = d3_rebind(target, source, source[method]);
             return target;
@@ -265,13 +269,15 @@ async function createMap() {
         // If passed with no arguments, gets the value.
         // If passed with arguments, sets the value and returns the target.
         function d3_rebind(target, source, method) {
-            return function() {
-            var value = method.apply(source, arguments);
-            return value === source ? target : value;
+            return function () {
+                var value = method.apply(source, arguments);
+                return value === source ? target : value;
             };
         }
+
         return d3rebind(cc, dispatcher, 'on');
     }
+
     const cc = clickcancel();
     counties.call(cc);
     cities.call(cc);
@@ -324,10 +330,14 @@ async function createMap() {
             .attr("stroke-width", 2.5)
             .attr("cursor", () => (isZoomed === d.properties.name) ? "zoom-out" : (isZoomed != "") ? "zoom-in" : "pointer");
 
-        bars.attr("stroke", da => d.properties.name === da.properties.name ? "#444" : null)
-        barLabels
-            .attr("fill", da => d.properties.name === da.properties.name ? "#444" : "grey")
-            .style("font-weight", da => d.properties.name === da.properties.name ? 900 : "normal")
+        percentageBars.selectAll('rect')
+            .attr("stroke", da => d.properties.name === da.properties.name ? "#444" : null)
+        percentageBars.selectAll('text')
+            .attr('fill', da => d.properties.name === da.properties.name ? "#444" : "grey")
+            .style("font-weight", da => d.properties.name === da.properties.name ? 600 : 'normal')
+        // percentageBarLabels
+        //     .attr("fill", da => d.properties.name === da.properties.name ? "#444" : "grey")
+        //     .style("font-weight", da => d.properties.name === da.properties.name ? 900 : "normal")
     }
 
     function updateTooltip() {
@@ -360,8 +370,12 @@ async function createMap() {
             .attr('stroke-width', null)
             .attr('cursor', 'pointer');
 
-        bars.attr("stroke", null)
-        barLabels.attr("fill", "grey").style("font-weight", "normal")
+        percentageBars.selectAll('rect')
+            .attr("stroke", null)
+        percentageBars.selectAll('text')
+            .attr('fill', 'grey')
+            .style('font-weight', 'normal')
+        // percentageBarLabels.attr("fill", "grey").style("font-weight", "normal")
     }
 
     function clicked(event, d, obj) {
@@ -392,7 +406,7 @@ async function createMap() {
         ohio.attr('stroke-width', 1 / transform.k);
     }
 
-    // ----------- ABSOLUTE BAR CHART -----------
+    // ----------- PERCENTAGE BAR CHART -----------
     const barScale = d3.scaleLinear()
         .domain([0, 1])
         .range([0, width / 2 - margin.right])
@@ -404,32 +418,29 @@ async function createMap() {
         .attr('width', width / 2)
         .attr('height', height);
 
-    const bars = svg3.selectAll('rect')
-        .data(ohioCounties.features.sort((x, y) => {
-            return d3.descending(
+    const percentageBars = svg3.selectAll('g')
+        .data(ohioCounties.features
+            .sort((x, y) => d3.descending(
                 x.properties.total_registrants / countyPopulations[x.properties.name],
                 y.properties.total_registrants / countyPopulations[y.properties.name]
-            )
-        }).filter(county => percentRegSelected.has(county.properties.name)), d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
-        .join(      
-            enter  => enter.append('rect'),
-            update => update,
-            exit   => exit.remove()) //Same with the positioning of the labels rather than hardcoded pixels
+            ))
+            .filter(county => percentRegSelected.has(county.properties.name)), d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
+        .join('g') //Same with the positioning of the labels rather than hardcoded pixels
+
+    percentageBars.append('rect')
         .attr('x', 0)
-        .attr('y', (d, i) => i * (barHeight+4))
+        .attr('y', (d, i) => i * (barHeight + 4))
         .attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
         .attr('height', barHeight)
+        .attr('rx', 2)
         .style('fill', '#9f67fa')
         .style('fill-opacity', d => calculateOpacity(formatDate(startDate), d.properties.name))
         .attr('transform', 'translate(5, 2)')
         .attr('stroke-width', 2)
-        // .attr('stroke', '#e2e4eb')
 
-    const barLabels = svg3.selectAll('text')
-        .data(ohioCounties.features.filter(county => percentRegSelected.has(county.properties.name)), d => d.properties.name)
-        .join('text')
+    percentageBars.append('text')
         .attr('x', (d) => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
-        .attr('y', (d, i) => i * (barHeight+4) + barHeight)
+        .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
         .attr('dx', 10)
         .attr('fill', 'grey')
         .attr('font-size', 10)
@@ -446,9 +457,9 @@ async function createMap() {
     //                 .style('fill-opacity', d => calculateOpacity(formatDate(startDate), d.properties.name))
     //                 .attr('transform', 'translate(5, 2)')
     //                 .attr('stroke-width', 2);
-        
+
     //     bars.exit().remove();
-        
+
     //     barLabels.enter().append('text')
     //                      .attr('x', (d) => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
     //                      .attr('y', (d, i) => i * (barHeight+4) + barHeight)
@@ -456,12 +467,12 @@ async function createMap() {
     //                      .attr('fill', 'grey')
     //                      .attr('font-size', 10)
     //                      .text(d => d.properties.name);
-        
+
     //     barLabels.exit().remove();
     // }
 
     svg3.append('g')
-        .attr('transform', `translate(5, ${(barHeight+4)*10+5})`) // Control translation of % pop
+        .attr('transform', `translate(5, ${(barHeight + 4) * 10 + 5})`) // Control translation of % pop
         .call(d3.axisBottom(barScale).tickFormat(d => d * 100))
         .append('text')
         // .attr('text-anchor', 'end')
@@ -480,21 +491,48 @@ async function createMap() {
         .attr('font-weight', 'bold')
         .text('Counties')
 
-    cc.on('dblclick', function(e, d) {
+    cc.on('dblclick', function (e, d) {
         console.log("DOUBGLEEE");
         (!percentRegSelected.has(d.properties.name)) ? percentRegSelected.add(d.properties.name) : percentRegSelected.delete(d.properties.name)
-        console.log(percentRegSelected);
-        // svg3.selectAll('rect')
-        // .data(ohioCounties.features.sort((x, y) => {
-        //     return d3.descending(
-        //         x.properties.total_registrants / countyPopulations[x.properties.name],
-        //         y.properties.total_registrants / countyPopulations[y.properties.name]
-        //     )
-        // }).filter(county => percentRegSelected.has(county.properties.name))) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
-        // .join('rect')
-        // svg3.selectAll('text')
-        // .data(ohioCounties.features.filter(county => percentRegSelected.has(county.properties.name)))
-        // .join('text')
-        console.log(percentRegSelected);
+        const newData = ohioCounties.features
+            .sort((x, y) => {
+                return d3.descending(
+                    x.properties.total_registrants / countyPopulations[x.properties.name],
+                    y.properties.total_registrants / countyPopulations[y.properties.name]
+                )
+            })
+            .filter(county => percentRegSelected.has(county.properties.name));
+
+        // percentageBarLabels
+        //     .data([], d => d.properties.name)
+        //     .join('text')
+        const newGroup = percentageBars.selectAll('g')
+            .data(newData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
+            .join(
+                enter => enter.append('g'),
+                update => update,
+                exit => exit.remove()
+            )
+        newGroup.exit().remove()
+        newGroup.enter()
+            .append('rect')
+            .attr('x', 0)
+            .attr('y', (d, i) => i * (barHeight + 4))
+            .attr('width', 50)//d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
+            .attr('height', barHeight)
+            .attr('rx', 2)
+            .style('fill', 'blue')
+            .style('fill-opacity', d => calculateOpacity(formatDate(startDate), d.properties.name))
+            .attr('transform', 'translate(5, 2)')
+            .attr('stroke-width', 2)
+
+        newGroup.enter()
+            .append('text')
+            .attr('x', (d) => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
+            .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
+            .attr('dx', 10)
+            .attr('fill', 'grey')
+            .attr('font-size', 10)
+            .text(d => d.properties.name);
     });
 }
