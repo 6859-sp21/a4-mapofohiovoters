@@ -416,7 +416,7 @@ async function createMap() {
     const svg3 = d3.select("#visualization-container")
         .append("svg")
         .attr('width', width / 2)
-        .attr('height', height);
+        .attr('height', height / 2);
 
     const originalData = ohioCounties.features
         .sort((x, y) => d3.descending(
