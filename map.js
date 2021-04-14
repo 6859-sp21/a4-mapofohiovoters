@@ -322,6 +322,7 @@ async function createMap() {
         d3.select(this)
             .attr("fill", '#da8601')
             .attr("stroke-width", 2.5)
+            .attr("cursor", () => (isZoomed === d.properties.name) ? "zoom-out" : (isZoomed != "") ? "zoom-in" : "pointer");
     }
 
     function updateTooltip() {
@@ -351,7 +352,8 @@ async function createMap() {
 
         d3.select(this)
             .attr('fill', null)
-            .attr('stroke-width', null);
+            .attr('stroke-width', null)
+            .attr('cursor', 'pointer');
     }
 
     function clicked(event, d, obj) {
@@ -373,6 +375,7 @@ async function createMap() {
             .attr('d', path)
             .on('mouseover', hoveringCityStart)
             .on('mouseout', hoveringCityEnd)
+
     }
 
     function zoomed(event) {
