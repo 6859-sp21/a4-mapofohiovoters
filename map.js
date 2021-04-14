@@ -384,7 +384,7 @@ async function createMap() {
         ohio.attr('stroke-width', 1 / transform.k);
     }
 
-    // ----------- BAR CHART -----------
+    // ----------- ABSOLUTE BAR CHART -----------
     const barScale = d3.scaleLinear()
         .domain([0, 1])
         .range([0, width / 2 - margin.right])
