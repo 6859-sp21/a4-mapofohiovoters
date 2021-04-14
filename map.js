@@ -328,7 +328,7 @@ async function createMap() {
         d3.select(this)
             .attr("fill", '#da8601')
             .attr("stroke-width", 2.5)
-            .attr("cursor", () => (isZoomed === d.properties.name) ? "zoom-out" : "zoom-in");
+            .attr("cursor", () => (isZoomed === d.properties.name) ? "zoom-out" : "pointer");
 
         percentageBars.selectAll('rect')
             .attr("stroke", da => d.properties.name === da.properties.name ? "#444" : null)
@@ -472,9 +472,10 @@ async function createMap() {
     //     barLabels.exit().remove();
     // }
 
-    svg3.append('g')
+    const percentageAxis = svg3.append('g')
         .attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`) // Control translation of % pop
         .call(d3.axisBottom(barScale).tickFormat(d => d * 100))
+    percentageAxis
         .append('text')
         // .attr('text-anchor', 'end')
         .attr('fill', 'black')
@@ -528,5 +529,7 @@ async function createMap() {
             .attr('font-size', 10)
             .text(d => d.properties.name);
         percentageBarLabels.exit().remove()
+
+        percentageAxis.attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`)
     });
 }
