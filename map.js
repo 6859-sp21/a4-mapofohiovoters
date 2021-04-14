@@ -323,6 +323,11 @@ async function createMap() {
             .attr("fill", '#da8601')
             .attr("stroke-width", 2.5)
             .attr("cursor", () => (isZoomed === d.properties.name) ? "zoom-out" : (isZoomed != "") ? "zoom-in" : "pointer");
+
+        bars.attr("stroke", da => d.properties.name === da.properties.name ? "#444" : null)
+        barLabels
+            .attr("fill", da => d.properties.name === da.properties.name ? "#444" : "grey")
+            .style("font-weight", da => d.properties.name === da.properties.name ? 900 : "normal")
     }
 
     function updateTooltip() {
@@ -354,6 +359,9 @@ async function createMap() {
             .attr('fill', null)
             .attr('stroke-width', null)
             .attr('cursor', 'pointer');
+
+        bars.attr("stroke", null)
+        barLabels.attr("fill", "grey").style("font-weight", "normal")
     }
 
     function clicked(event, d, obj) {
@@ -405,26 +413,27 @@ async function createMap() {
         }).slice(0, 10)) //Should eventually change with the number of counties / cities that we want to show
         .join('rect') //Same with the positioning of the labels rather than hardcoded pixels
         .attr('x', 0)
-        .attr('y', (d, i) => i * barHeight)
+        .attr('y', (d, i) => i * (barHeight+4))
         .attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
         .attr('height', barHeight)
         .style('fill', '#9f67fa')
         .style('fill-opacity', d => calculateOpacity(formatDate(startDate), d.properties.name))
-        .attr('transform', 'translate(5, 0)')
-        .style('stroke', '#f5f6f7')
+        .attr('transform', 'translate(5, 2)')
+        .attr('stroke-width', 2)
+        // .attr('stroke', '#e2e4eb')
 
     const barLabels = svg3.selectAll('text')
         .data(ohioCounties.features.slice(0,10))
         .join('text')
         .attr('x', (d) => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
-        .attr('y', (d, i) => i * barHeight + barHeight - 2)
+        .attr('y', (d, i) => i * (barHeight+4) + barHeight)
         .attr('dx', 10)
         .attr('fill', 'grey')
         .attr('font-size', 10)
         .text(d => d.properties.name)
 
     svg3.append('g')
-        .attr('transform', `translate(5, ${barHeight*12 - 20})`) // Control translation of % pop
+        .attr('transform', `translate(5, ${(barHeight+4)*10+5})`) // Control translation of % pop
         .call(d3.axisBottom(barScale).tickFormat(d => d * 100))
         .append('text')
         // .attr('text-anchor', 'end')
