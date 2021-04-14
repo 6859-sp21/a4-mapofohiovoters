@@ -425,7 +425,11 @@ async function createMap() {
                 y.properties.total_registrants / countyPopulations[y.properties.name]
             ))
             .filter(county => percentRegSelected.has(county.properties.name)), d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
-        .join('g') //Same with the positioning of the labels rather than hardcoded pixels
+        .join(
+            enter => enter.append('g'),
+            update => update.remove(),
+            exit => exit.remove()
+        ) //Same with the positioning of the labels rather than hardcoded pixels
 
     percentageBars.append('rect')
         .attr('x', 0)
@@ -503,9 +507,9 @@ async function createMap() {
             })
             .filter(county => percentRegSelected.has(county.properties.name));
 
-        // percentageBarLabels
-        //     .data([], d => d.properties.name)
-        //     .join('text')
+        console.log(newData)
+        percentageBars.selectAll('rect').remove()
+        percentageBars.selectAll('text').remove()
         const newGroup = percentageBars.selectAll('g')
             .data(newData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
             .join(
@@ -513,20 +517,19 @@ async function createMap() {
                 update => update,
                 exit => exit.remove()
             )
-        newGroup.exit().remove()
-        newGroup.enter()
+        newGroup
             .append('rect')
             .attr('x', 0)
             .attr('y', (d, i) => i * (barHeight + 4))
-            .attr('width', 50)//d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
+            .attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
             .attr('height', barHeight)
             .attr('rx', 2)
-            .style('fill', 'blue')
+            .style('fill', '#9f67fa')
             .style('fill-opacity', d => calculateOpacity(formatDate(startDate), d.properties.name))
             .attr('transform', 'translate(5, 2)')
             .attr('stroke-width', 2)
 
-        newGroup.enter()
+        newGroup
             .append('text')
             .attr('x', (d) => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
             .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
