@@ -13,18 +13,19 @@ async function createMap() {
 
     let formatDateIntoYear = d3.timeFormat("%Y");
     let formatDate = date => {
-        let dateString = d3.timeFormat("%m/%e/%Y")(date).replaceAll(/\s/g, '');
-        if (dateString[0] === '0') {
-            dateString = dateString.slice(1);
-        }
-        return dateString
+        // let dateString = d3.timeFormat("%m/%e/%Y")(date).replaceAll(/\s/g, '');
+        // if (dateString[0] === '0') {
+        //     dateString = dateString.slice(1);
+        // }
+        // return dateString
+        return d3.timeFormat("%m/%d/%Y")(date)
     }
 
     let currentDateIndex = 0;
     let isZoomed = "";
 
     // ----------- DATA -----------
-    const ohioCounties = await d3.json('./data/final_data.json');
+    const ohioCounties = await d3.json('./data/final_data_new.json');
     const ohioCities = await d3.json('./data/ohio_cities.geojson')
     const countyPopulationsArray = await d3.csv('./data/population.csv');
     const countyPopulations = {};
@@ -32,6 +33,7 @@ async function createMap() {
         countyPopulations[data.county] = data.population;
     }
     let maxRegistrantsPerCapita = 0;
+    let minRegistrantsPerCapita = ohioCounties.features[0].properties.registrations["11/08/2016"] / countyPopulations[ohioCounties.features[0].properties.name]
 
     let dates = Object.keys(ohioCounties.features[0].properties.registrations).map(dateString => new Date(dateString));
     dates = dates.sort((a, b) => a - b);
@@ -41,6 +43,9 @@ async function createMap() {
         const name = feature.properties.name;
         if (feature.properties.total_registrants / countyPopulations[name] > maxRegistrantsPerCapita) {
             maxRegistrantsPerCapita = feature.properties.total_registrants / countyPopulations[name];
+        }
+        if (feature.properties.registrations["11/08/2016"] / countyPopulations[name] < minRegistrantsPerCapita) {
+            minRegistrantsPerCapita = feature.properties.registrations["11/08/2016"] / countyPopulations[name];
         }
         cumulativeSumMap[name] = {};
         let total = 0;
@@ -55,6 +60,14 @@ async function createMap() {
     const projection = d3.geoEquirectangular().fitExtent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]], ohioCounties);
     const path = d3.geoPath().projection(projection);
 
+    const opacityScale = d3.scaleLinear().domain([minRegistrantsPerCapita, maxRegistrantsPerCapita]).range([0.1, 1])
+    const calculateOpacity = (date, county) => {
+        const numRegistrants = cumulativeSumMap[county][date]
+        const population = countyPopulations[county]
+        const registrantsPerCapita = numRegistrants / population
+        const opacity = opacityScale(registrantsPerCapita)
+        return opacity
+    }
 
     // ----------- SLIDER -----------
     const svg1 = d3.select("#slider-container")
@@ -126,7 +139,7 @@ async function createMap() {
         label
             .attr("x", x(h))
             .text(formatDate(h));
-        counties.style('fill-opacity', d => cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name] / maxRegistrantsPerCapita)
+        counties.style('fill-opacity', d => calculateOpacity(formatDate(h), d.properties.name))
         bars.attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
         // bars.style('fill-opacity', d => cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name] / maxRegistrantsPerCapita)
         barLabels.attr('x', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
@@ -193,11 +206,11 @@ async function createMap() {
         .on('mouseout', hoveringCountyEnd)
         .attr('d', path)
         .attr('fill-opacity', d => {
-            return cumulativeSumMap[d.properties.name][formatDate(startDate)] / countyPopulations[d.properties.name] / maxRegistrantsPerCapita;
+            return calculateOpacity(formatDate(startDate), d.properties.name);
         })
         .attr('stroke-opacity', 1);
-    
-    
+
+
     const cities = ohio.append('g')
     .attr('stroke', 'none')
     .attr('fill-opacity', 0.6)
@@ -244,7 +257,7 @@ async function createMap() {
             while (++i < n) target[method = arguments[i]] = d3_rebind(target, source, source[method]);
             return target;
         };
-        
+
         // Method is assumed to be a standard D3 getter-setter:
         // If passed with no arguments, gets the value.
         // If passed with arguments, sets the value and returns the target.
@@ -370,7 +383,7 @@ async function createMap() {
 
     // ----------- BAR CHART -----------
     const barScale = d3.scaleLinear()
-        .domain([0, 0.4])
+        .domain([0, 1])
         .range([0, width / 2 - margin.right])
         .nice();
 
