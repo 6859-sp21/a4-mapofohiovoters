@@ -424,9 +424,10 @@ async function createMap() {
             y.properties.total_registrants / countyPopulations[y.properties.name]
         ))
         .filter(county => percentRegSelected.has(county.properties.name))
-    const percentageBars = svg3.selectAll('rect')
+    let percentageBars = svg3.selectAll('rect')
         .data(originalData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
         .join('rect') //Same with the positioning of the labels rather than hardcoded pixels
+        .attr('class', 'percentage-bar')
         .attr('x', 0)
         .attr('y', (d, i) => i * (barHeight + 4))
         .attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
@@ -437,9 +438,10 @@ async function createMap() {
         .attr('transform', 'translate(5, 2)')
         .attr('stroke-width', 2)
 
-    const percentageBarLabels = svg3.selectAll('text')
-        .data(originalData)
+    let percentageBarLabels = svg3.selectAll('text')
+        .data(originalData, d => d.properties.name)
         .join('text')
+        .attr('class', 'percentage-bar-labels')
         .attr('x', (d) => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
         .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
         .attr('dx', 10)
@@ -505,9 +507,10 @@ async function createMap() {
             })
             .filter(county => percentRegSelected.has(county.properties.name));
 
-        percentageBars
+        percentageBars = svg3.selectAll('.percentage-bar')
             .data(newData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
             .join('rect')
+            .attr('class', 'percentage-bar')
             .attr('x', 0)
             .attr('y', (d, i) => i * (barHeight + 4))
             .attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
@@ -517,18 +520,17 @@ async function createMap() {
             .style('fill-opacity', d => calculateOpacity(formatDate(startDate), d.properties.name))
             .attr('transform', 'translate(5, 2)')
             .attr('stroke-width', 2)
-        percentageBars.exit().remove()
 
-        percentageBarLabels
+        percentageBarLabels = svg3.selectAll('.percentage-bar-labels')
             .data(newData, d => d.properties.name)
             .join('text')
+            .attr('class', 'percentage-bar-labels')
             .attr('x', (d) => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
             .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
             .attr('dx', 10)
             .attr('fill', 'grey')
             .attr('font-size', 10)
             .text(d => d.properties.name);
-        percentageBarLabels.exit().remove()
 
         percentageAxis.attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`)
     });
