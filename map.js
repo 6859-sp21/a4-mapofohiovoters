@@ -145,7 +145,7 @@ async function createMap() {
         counties.style('fill-opacity', d => calculateOpacity(formatDate(h), d.properties.name))
         percentageBars.attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
         percentageBars.style('fill-opacity', d => calculateOpacity(formatDate(h), d.properties.name))
-        // percentageBarLabels.attr('x', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
+        percentageBarLabels.attr('x', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
     }
 
     // ----------- PLAY BUTTON -----------
@@ -328,16 +328,16 @@ async function createMap() {
         d3.select(this)
             .attr("fill", '#da8601')
             .attr("stroke-width", 2.5)
-            .attr("cursor", () => (isZoomed === d.properties.name) ? "zoom-out" : (isZoomed != "") ? "zoom-in" : "pointer");
+            .attr("cursor", () => (isZoomed === d.properties.name) ? "zoom-out" : "zoom-in");
 
         percentageBars.selectAll('rect')
             .attr("stroke", da => d.properties.name === da.properties.name ? "#444" : null)
         percentageBars.selectAll('text')
             .attr('fill', da => d.properties.name === da.properties.name ? "#444" : "grey")
             .style("font-weight", da => d.properties.name === da.properties.name ? 600 : 'normal')
-        // percentageBarLabels
-        //     .attr("fill", da => d.properties.name === da.properties.name ? "#444" : "grey")
-        //     .style("font-weight", da => d.properties.name === da.properties.name ? 900 : "normal")
+        percentageBarLabels
+            .attr("fill", da => d.properties.name === da.properties.name ? "#444" : "grey")
+            .style("font-weight", da => d.properties.name === da.properties.name ? 900 : "normal")
     }
 
     function updateTooltip() {
@@ -375,7 +375,7 @@ async function createMap() {
         percentageBars.selectAll('text')
             .attr('fill', 'grey')
             .style('font-weight', 'normal')
-        // percentageBarLabels.attr("fill", "grey").style("font-weight", "normal")
+        percentageBarLabels.attr("fill", "grey").style("font-weight", "normal")
     }
 
     function clicked(event, d, obj) {
@@ -418,20 +418,15 @@ async function createMap() {
         .attr('width', width / 2)
         .attr('height', height);
 
-    const percentageBars = svg3.selectAll('g')
-        .data(ohioCounties.features
-            .sort((x, y) => d3.descending(
-                x.properties.total_registrants / countyPopulations[x.properties.name],
-                y.properties.total_registrants / countyPopulations[y.properties.name]
-            ))
-            .filter(county => percentRegSelected.has(county.properties.name)), d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
-        .join(
-            enter => enter.append('g'),
-            update => update.remove(),
-            exit => exit.remove()
-        ) //Same with the positioning of the labels rather than hardcoded pixels
-
-    percentageBars.append('rect')
+    const originalData = ohioCounties.features
+        .sort((x, y) => d3.descending(
+            x.properties.total_registrants / countyPopulations[x.properties.name],
+            y.properties.total_registrants / countyPopulations[y.properties.name]
+        ))
+        .filter(county => percentRegSelected.has(county.properties.name))
+    const percentageBars = svg3.selectAll('rect')
+        .data(originalData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
+        .join('rect') //Same with the positioning of the labels rather than hardcoded pixels
         .attr('x', 0)
         .attr('y', (d, i) => i * (barHeight + 4))
         .attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
@@ -442,7 +437,9 @@ async function createMap() {
         .attr('transform', 'translate(5, 2)')
         .attr('stroke-width', 2)
 
-    percentageBars.append('text')
+    const percentageBarLabels = svg3.selectAll('text')
+        .data(originalData)
+        .join('text')
         .attr('x', (d) => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
         .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
         .attr('dx', 10)
@@ -476,7 +473,7 @@ async function createMap() {
     // }
 
     svg3.append('g')
-        .attr('transform', `translate(5, ${(barHeight + 4) * 10 + 5})`) // Control translation of % pop
+        .attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`) // Control translation of % pop
         .call(d3.axisBottom(barScale).tickFormat(d => d * 100))
         .append('text')
         // .attr('text-anchor', 'end')
@@ -507,18 +504,9 @@ async function createMap() {
             })
             .filter(county => percentRegSelected.has(county.properties.name));
 
-        console.log(newData)
-        percentageBars.selectAll('rect').remove()
-        percentageBars.selectAll('text').remove()
-        const newGroup = percentageBars
+        percentageBars
             .data(newData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
-            .join(
-                enter => enter.append('g'),
-                update => update,
-                exit => exit.remove()
-            )
-        newGroup
-            .append('rect')
+            .join('rect')
             .attr('x', 0)
             .attr('y', (d, i) => i * (barHeight + 4))
             .attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
@@ -528,14 +516,17 @@ async function createMap() {
             .style('fill-opacity', d => calculateOpacity(formatDate(startDate), d.properties.name))
             .attr('transform', 'translate(5, 2)')
             .attr('stroke-width', 2)
+        percentageBars.exit().remove()
 
-        newGroup
-            .append('text')
+        percentageBarLabels
+            .data(newData, d => d.properties.name)
+            .join('text')
             .attr('x', (d) => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
             .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
             .attr('dx', 10)
             .attr('fill', 'grey')
             .attr('font-size', 10)
             .text(d => d.properties.name);
+        percentageBarLabels.exit().remove()
     });
 }
