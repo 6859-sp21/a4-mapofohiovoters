@@ -2,7 +2,7 @@ async function createMap() {
 
     // ----------- CONSTANTS & HELPERS -----------
     const width = 800;
-    const height = 920;
+    const height = 800;
     const barHeight = 10;
     let margin = {top: 50, right: 50, bottom: 100, left: 50};
     let moving = false;
