@@ -510,7 +510,7 @@ async function createMap() {
         console.log(newData)
         percentageBars.selectAll('rect').remove()
         percentageBars.selectAll('text').remove()
-        const newGroup = percentageBars.selectAll('g')
+        const newGroup = percentageBars
             .data(newData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
             .join(
                 enter => enter.append('g'),
