@@ -330,11 +330,8 @@ async function createMap() {
             .attr("stroke-width", 2.5)
             .attr("cursor", () => (isZoomed === d.properties.name) ? "zoom-out" : "pointer");
 
-        percentageBars.selectAll('rect')
+        percentageBars
             .attr("stroke", da => d.properties.name === da.properties.name ? "#444" : null)
-        percentageBars.selectAll('text')
-            .attr('fill', da => d.properties.name === da.properties.name ? "#444" : "grey")
-            .style("font-weight", da => d.properties.name === da.properties.name ? 600 : 'normal')
         percentageBarLabels
             .attr("fill", da => d.properties.name === da.properties.name ? "#444" : "grey")
             .style("font-weight", da => d.properties.name === da.properties.name ? 900 : "normal")
