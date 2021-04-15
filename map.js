@@ -802,6 +802,7 @@ async function createMap() {
 
     let r = 200;
     const speedHeight = 200,
+        speedMargin = 30,
         minAngle = -80,
         maxAngle = 80,
         arcWidth = 40,
@@ -812,7 +813,7 @@ async function createMap() {
         pointerTailLength = 5,
         pointerHeadLengthPercent = 0.9;
     let range = maxAngle - minAngle;
-    const centerTx = `translate(${width / 4}, ${r - 20})`;
+    const centerTx = `translate(${width / 4}, ${speedMargin + r - 20})`;
     let pointerHeadLength = Math.round(r * pointerHeadLengthPercent);
 
     let arc = d3.arc()
@@ -834,11 +835,11 @@ async function createMap() {
     const renderSpeedometer = (newValue, countyName) => {
         speedSvg = d3.select("#speedometer-container").append('svg')
             .attr('width', width / 2)
-            .attr('height', speedHeight)
+            .attr('height', speedHeight + speedMargin)
 
         speedSvg.append('text')
             .attr('x', width / 4)
-            .attr('y', speedHeight - r / 2)
+            .attr('y', speedMargin + speedHeight - r / 2)
             .attr('font-size', 18)
             .attr('color', '#31343d')
             .attr('text-anchor', 'middle')
@@ -847,7 +848,7 @@ async function createMap() {
         if (isZoomed) {
             speedSvg.append('text')
                 .attr('x', width / 4)
-                .attr('y', speedHeight - r / 2)
+                .attr('y', speedMargin + speedHeight - r / 2)
                 .attr('dy', 20)
                 .attr('font-size', 12)
                 .attr('color', '#31343d')
