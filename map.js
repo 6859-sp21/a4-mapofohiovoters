@@ -367,12 +367,11 @@ async function createMap() {
             .attr('stroke-width', null)
             .attr('cursor', 'pointer');
 
-        percentageBars.selectAll('rect')
+        percentageBars
             .attr("stroke", null)
-        percentageBars.selectAll('text')
-            .attr('fill', 'grey')
-            .style('font-weight', 'normal')
-        percentageBarLabels.attr("fill", "grey").style("font-weight", "normal")
+        percentageBarLabels
+            .attr("fill", "grey")
+            .style("font-weight", "normal")
     }
 
     function clicked(event, d, obj) {
