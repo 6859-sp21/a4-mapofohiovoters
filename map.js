@@ -25,19 +25,13 @@ async function createMap() {
         return deg * Math.PI / 180;
     }
 
-    function newAngle(d) {
-        var ratio = scale(d);
-        var newAngle = config.minAngle + (ratio * range);
-        return newAngle;
-    }
-
     const arcColorFn = d3.interpolate(d3.rgb('#ebf0ff'), d3.rgb('#5C7FEC'))
 
     const percentRegSelected = new Set(['Ottawa', 'Lawrence', 'Jefferson', 'Hamilton', 'Medina', 'Geauga', 'Delaware', 'Erie', 'Mahoning', 'Henry']);
-    console.log(percentRegSelected);
 
     let currentDateIndex = 0;
     let isZoomed = "";
+    let zoomedCountyData = undefined;
 
     // ----------- DATA -----------
     const ohioCounties = await d3.json('./data/final_data_new.json');
@@ -64,11 +58,17 @@ async function createMap() {
         }
         cumulativeSumMap[name] = {};
         let total = 0;
-        for (const date of dates) {
+        let maxRegistrants = 0;
+        dates.forEach((date, i) => {
             let dateString = formatDate(date);
-            total += feature.properties.registrations[dateString]
+            const registrants = feature.properties.registrations[dateString]
+            total += registrants
+            if (i !== 0 && registrants > maxRegistrants) {
+                maxRegistrants = registrants
+            }
             cumulativeSumMap[name][dateString] = total;
-        }
+        })
+        feature.properties.maxRegistrants = maxRegistrants;
     }
     const startDate = dates[0],
         endDate = dates[dates.length - 1];
@@ -161,6 +161,8 @@ async function createMap() {
         percentageBarsCity.attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
         percentageBarsCity.style('fill-opacity', d => calculateOpacity(formatDate(h), d.properties.name))
         percentageBarLabelsCity.attr('x', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
+        let delta = zoomedCountyData ? zoomedCountyData.properties.registrations[formatDate(dates[currentDateIndex])] : 0;
+        updateSpeedometerPointer(delta)
     }
 
     // ----------- PLAY BUTTON -----------
@@ -177,7 +179,7 @@ async function createMap() {
                 if (currentDateIndex === dates.length - 1) {
                     currentDateIndex = 0;
                 }
-                timer = setInterval(step, 5);
+                timer = setInterval(step, 80);
                 button.text("Pause");
             }
         })
@@ -310,6 +312,8 @@ async function createMap() {
             .data([])
             .join('path')
         isZoomed = "";
+        zoomedCountyData = undefined;
+        updateSpeedometer(0, "", 10)
     }
 
     function hoveringCityStart(event, d) {
@@ -390,6 +394,7 @@ async function createMap() {
     }
 
     function clicked(event, d, obj) {
+        zoomedCountyData = d;
         const [[x0, y0], [x1, y1]] = path.bounds(d);
         event.stopPropagation();
         counties.transition().style("fill", null);
@@ -408,7 +413,8 @@ async function createMap() {
             .attr('d', path)
             .on('mouseover', hoveringCityStart)
             .on('mouseout', hoveringCityEnd)
-
+        let delta = d.properties.registrations[formatDate(dates[currentDateIndex])]
+        updateSpeedometer(delta, d.properties.name, d.properties.maxRegistrants)
     }
 
     function zoomed(event) {
@@ -768,7 +774,8 @@ async function createMap() {
     // ---------- SPEEDOMETER ----------
 
     let r = 200;
-    const minAngle = -80,
+    const speedHeight = 200,
+        minAngle = -80,
         maxAngle = 80,
         arcWidth = 40,
         arcInset = 20,
@@ -778,28 +785,48 @@ async function createMap() {
         pointerTailLength = 5,
         pointerHeadLengthPercent = 0.9;
     let range = maxAngle - minAngle;
-    const centerTx = `translate(${r}, ${2*r-20})`;
+    const centerTx = `translate(${width / 4}, ${r - 20})`;
     let pointerHeadLength = Math.round(r * pointerHeadLengthPercent);
-    let value = 0;
 
     let arc = d3.arc()
         .innerRadius(r - arcWidth - arcInset)
         .outerRadius(r - arcInset)
         .startAngle((d, i) => deg2rad(minAngle + (d * i * range)))
         .endAngle((d, i) => deg2rad(minAngle + (d * (i + 1) * range)));
-    let scale = d3.scaleLinear().domain([0, 50]).range([0, 1]);
+
+    let scale = d3.scaleLinear().domain([0, 1]).range([0, 1]);
     let ticks = scale.ticks(numTicks);
-    let tickData = d3.range(numTicks).map(() => 1 / numTicks);
+    let tickData = d3.range(ticks.length).map(() => 1 / ticks.length);
 
     // let donut = d3.layout.pie();
 
     let pointer;
+    let speedSvg;
+    console.log(width/2)
 
-    const renderSpeedometer = newValue => {
-        let speedSvg = svg3.append('svg:svg')
-            .attr('class', 'gauge')
+    const renderSpeedometer = (newValue, countyName) => {
+        speedSvg = d3.select("#speedometer-container").append('svg')
             .attr('width', width / 2)
-            .attr('height', height / 2);
+            .attr('height', speedHeight)
+
+        speedSvg.append('text')
+            .attr('x', width / 4)
+            .attr('y', speedHeight - r / 2)
+            .attr('font-size', 18)
+            .attr('color', '#31343d')
+            .attr('text-anchor', 'middle')
+            .text(countyName || "Select a county")
+
+        if (isZoomed) {
+            speedSvg.append('text')
+                .attr('x', width / 4)
+                .attr('y', speedHeight - r / 2)
+                .attr('dy', 20)
+                .attr('font-size', 12)
+                .attr('color', '#31343d')
+                .attr('text-anchor', 'middle')
+                .text('# registrants per day')
+        }
 
         const arcs = speedSvg.append('g')
             .attr('class', 'arc')
@@ -815,15 +842,17 @@ async function createMap() {
             .attr('class', 'label')
             .attr('transform', centerTx)
 
-        lg.selectAll('text')
-            .data(ticks)
-            .enter().append('text')
-            .attr('transform', d => {
-                const ratio = scale(d)
-                const newAngle = minAngle + (ratio * range)
-                return `rotate(${newAngle}) translate(0, ${labelInset - r})`
-            })
-            .text(d3.format('d'))
+        if (isZoomed) {
+            lg.selectAll('text')
+                .data(ticks)
+                .enter().append('text')
+                .attr('transform', d => {
+                    const ratio = scale(d)
+                    const newAngle = minAngle + (ratio * range)
+                    return `rotate(${newAngle}) translate(0, ${labelInset - r})`
+                })
+                .text(d3.format('d'))
+        }
 
         const lineData = [
             [pointerWidth / 2, 0],
@@ -845,14 +874,20 @@ async function createMap() {
     }
 
     const updateSpeedometerPointer = (newValue) => {
-        const ratio = scale(newValue);
+        const ratio = scale(currentDateIndex === 0 ? 0 : newValue);
         const newAngle = minAngle + (ratio * range);
         pointer.transition()
-            .duration(200)
+            .duration(70)
             .attr('transform', `rotate(${newAngle})`);
     }
 
-    renderSpeedometer();
-    updateSpeedometerPointer(8)
-    setTimeout(() => updateSpeedometerPointer(25), 2000)
+    const updateSpeedometer = (newValue, countyName, newMaxRegistrants) => {
+        scale = d3.scaleLinear().domain([0, newMaxRegistrants]).range([0, 1]);
+        ticks = scale.ticks(numTicks);
+        tickData = d3.range(ticks.length-1).map(() => 1 / (ticks.length-1));
+        speedSvg?.remove()
+        renderSpeedometer(newValue, countyName)
+    }
+
+    updateSpeedometer(0, "", 1);
 }
