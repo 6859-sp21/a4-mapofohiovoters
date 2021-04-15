@@ -21,6 +21,18 @@ async function createMap() {
         return d3.timeFormat("%m/%d/%Y")(date)
     }
 
+    function deg2rad(deg) {
+        return deg * Math.PI / 180;
+    }
+
+    function newAngle(d) {
+        var ratio = scale(d);
+        var newAngle = config.minAngle + (ratio * range);
+        return newAngle;
+    }
+
+    const arcColorFn = d3.interpolate(d3.rgb('#ebf0ff'), d3.rgb('#5C7FEC'))
+
     const percentRegSelected = new Set(['Ottawa', 'Lawrence', 'Jefferson', 'Hamilton', 'Medina', 'Geauga', 'Delaware', 'Erie', 'Mahoning', 'Henry']);
     console.log(percentRegSelected);
 
@@ -223,10 +235,10 @@ async function createMap() {
     function clickcancel() {
         // we want to a distinguish single/double click
         // details http://bl.ocks.org/couchand/6394506
-        var dispatcher = d3.dispatch('click', 'dblclick');
+        let dispatcher = d3.dispatch('click', 'dblclick');
 
         function cc(selection) {
-            var down, tolerance = 5, last, wait = null, args;
+            let down, tolerance = 5, last, wait = null, args;
 
             // euclidean distance
             function dist(a, b) {
@@ -259,8 +271,8 @@ async function createMap() {
         }
 
         // Copies a variable number of methods from source to target.
-        var d3rebind = function (target, source) {
-            var i = 1, n = arguments.length, method;
+        let d3rebind = function (target, source) {
+            let i = 1, n = arguments.length, method;
             while (++i < n) target[method = arguments[i]] = d3_rebind(target, source, source[method]);
             return target;
         };
@@ -270,7 +282,7 @@ async function createMap() {
         // If passed with arguments, sets the value and returns the target.
         function d3_rebind(target, source, method) {
             return function () {
-                var value = method.apply(source, arguments);
+                let value = method.apply(source, arguments);
                 return value === source ? target : value;
             };
         }
@@ -530,4 +542,95 @@ async function createMap() {
 
         percentageAxis.attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`)
     });
+
+    // ---------- SPEEDOMETER ----------
+
+    let r = 200;
+    const minAngle = -80,
+        maxAngle = 80,
+        arcWidth = 40,
+        arcInset = 20,
+        numTicks = 5,
+        labelInset = 10,
+        pointerWidth = 10,
+        pointerTailLength = 5,
+        pointerHeadLengthPercent = 0.9;
+    let range = maxAngle - minAngle;
+    const centerTx = `translate(${r}, ${2*r-20})`;
+    let pointerHeadLength = Math.round(r * pointerHeadLengthPercent);
+    let value = 0;
+
+    let arc = d3.arc()
+        .innerRadius(r - arcWidth - arcInset)
+        .outerRadius(r - arcInset)
+        .startAngle((d, i) => deg2rad(minAngle + (d * i * range)))
+        .endAngle((d, i) => deg2rad(minAngle + (d * (i + 1) * range)));
+    let scale = d3.scaleLinear().domain([0, 50]).range([0, 1]);
+    let ticks = scale.ticks(numTicks);
+    let tickData = d3.range(numTicks).map(() => 1 / numTicks);
+
+    // let donut = d3.layout.pie();
+
+    let pointer;
+
+    const renderSpeedometer = newValue => {
+        let speedSvg = svg3.append('svg:svg')
+            .attr('class', 'gauge')
+            .attr('width', width / 2)
+            .attr('height', height / 2);
+
+        const arcs = speedSvg.append('g')
+            .attr('class', 'arc')
+            .attr('transform', centerTx)
+
+        arcs.selectAll('path')
+            .data(tickData)
+            .enter().append('path')
+            .attr('fill', (d, i) => arcColorFn(d * i))
+            .attr('d', arc);
+
+        const lg = speedSvg.append('g')
+            .attr('class', 'label')
+            .attr('transform', centerTx)
+
+        lg.selectAll('text')
+            .data(ticks)
+            .enter().append('text')
+            .attr('transform', d => {
+                const ratio = scale(d)
+                const newAngle = minAngle + (ratio * range)
+                return `rotate(${newAngle}) translate(0, ${labelInset - r})`
+            })
+            .text(d3.format('d'))
+
+        const lineData = [
+            [pointerWidth / 2, 0],
+            [0, -pointerHeadLength],
+            [-(pointerWidth / 2), 0],
+            [0, pointerTailLength],
+            [pointerWidth / 2, 0]
+        ];
+        const pointerLine = d3.line().curve(d3.curveMonotoneX);
+        const pg = speedSvg.append('g').data([lineData])
+            .attr('class', 'pointer')
+            .attr('transform', centerTx);
+
+        pointer = pg.append('path')
+            .attr('d', pointerLine)
+            .attr('transform', `rotate(${minAngle})`);
+
+        updateSpeedometerPointer(newValue || 0);
+    }
+
+    const updateSpeedometerPointer = (newValue) => {
+        const ratio = scale(newValue);
+        const newAngle = minAngle + (ratio * range);
+        pointer.transition()
+            .duration(200)
+            .attr('transform', `rotate(${newAngle})`);
+    }
+
+    renderSpeedometer();
+    updateSpeedometerPointer(8)
+    setTimeout(() => updateSpeedometerPointer(25), 2000)
 }
