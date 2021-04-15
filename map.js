@@ -643,6 +643,7 @@ async function createMap() {
 
     cc.on('dblclick', function (e, d) {
         (!percentRegSelected.has(d.properties.name)) ? percentRegSelected.add(d.properties.name) : percentRegSelected.delete(d.properties.name)
+        svg6.attr('height', 100 + (barHeight)*percentRegSelected.size + 4*(percentRegSelected.size - 10));
         svg5.attr('height', 100 + (barHeight)*percentRegSelected.size + 4*(percentRegSelected.size - 10));
         svg4.attr('height', 100 + (barHeight)*percentRegSelected.size + 4*(percentRegSelected.size - 10));
         svg3.attr('height', 100 + (barHeight)*percentRegSelected.size + 4*(percentRegSelected.size - 10));
