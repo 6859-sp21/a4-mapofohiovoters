@@ -6,6 +6,7 @@ async function createMap() {
     const barHeight = 10;
     let margin = {top: 50, right: 50, bottom: 100, left: 50};
     let moving = false;
+    let stepTime = 100;
 
     //Used to access properties of what is currently being hovered so that tooltip
     //html can be updated while playing
@@ -173,15 +174,39 @@ async function createMap() {
             if (button.text() === "Pause") {
                 moving = false;
                 clearInterval(timer);
-                button.text("Play");
+                button
+                    .style("background-color", "#9f67fa88")
+                    .text("Play");
             } else {
                 moving = true;
                 if (currentDateIndex === dates.length - 1) {
                     currentDateIndex = 0;
                 }
-                timer = setInterval(step, 80);
-                button.text("Pause");
+                timer = setInterval(step, stepTime);
+                button
+                    .style("background-color", "#9f67fa")
+                    .text("Pause");
             }
+        })
+
+    const speedButtons = d3.selectAll(".speed-button");
+    speedButtons
+        .on('click', function () {
+            const button = d3.select(this);
+            console.log(button.text())
+            if (button.text() === '1x') {
+                stepTime = 100;
+            } else if (button.text() === '2x') {
+                stepTime = 30;
+            } else if (button.text() === '3x') {
+                stepTime = 5;
+            }
+            if (moving) {
+                clearInterval(timer);
+                timer = setInterval(step, stepTime);
+            }
+            speedButtons.style('opacity', 0.6);
+            button.style('opacity', 1);
         })
 
     function step() {
@@ -191,7 +216,9 @@ async function createMap() {
             moving = false;
             currentDateIndex = dates.length - 1;
             clearInterval(timer);
-            playButton.text("Play");
+            playButton
+                .style("background-color", "#9f67fa88")
+                .text("Play");
         }
     }
 
@@ -877,7 +904,7 @@ async function createMap() {
         const ratio = scale(currentDateIndex === 0 ? 0 : newValue);
         const newAngle = minAngle + (ratio * range);
         pointer.transition()
-            .duration(70)
+            .duration(stepTime*0.9)
             .attr('transform', `rotate(${newAngle})`);
     }
 
