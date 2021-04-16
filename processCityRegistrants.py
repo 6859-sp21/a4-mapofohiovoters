@@ -53,8 +53,6 @@ for i in range(len(original_json['features'])):
 for i in toRemove[::-1]:
     del original_json['features'][i]
 
-print(len(toKeep))
-print(len(original_json['features']))
 
 # print(original_json['features'][0]["properties"])
 with open('data/final_data_new_for_city.json', 'w') as file:
