@@ -428,6 +428,33 @@ async function createMap() {
             .style("font-weight", da => d.properties.name === da.properties.name ? 900 : "normal")
     }
 
+    function hoveringBarStart(event, d) {
+        tooltip.transition()
+            .duration(200)
+            .style("opacity", 0.95);
+        hoveredProperties = d.properties;
+        updateTooltip();
+        tooltip.style("left", `${event.pageX + 10}px`)
+            .style('background', '#f5f6f7')
+            .style("top", `${event.pageY + 10}px`);
+
+        percentageBars
+            .attr("stroke", da => d.properties.name === da.properties.name ? "#444" : null)
+        percentageBarLabels
+            .attr("fill", da => d.properties.name === da.properties.name ? "#444" : "grey")
+            .style("font-weight", da => d.properties.name === da.properties.name ? 900 : "normal")
+
+        grossBars
+            .attr("stroke", da => d.properties.name === da.properties.name ? "#444" : null)
+        grossBarLabels
+            .attr("fill", da => d.properties.name === da.properties.name ? "#444" : "grey")
+            .style("font-weight", da => d.properties.name === da.properties.name ? 900 : "normal")
+
+        counties
+            .attr("fill", da => d.properties.name === da.properties.name ? '#da8601' : null)
+            .attr("stroke-width", da => d.properties.name === da.properties.name ? 2.5 : null)
+    }
+
     function updateTooltip() {
         if (hoveredProperties.lsad === 'County') {
             const pop = countyPopulations[hoveredProperties.name];
@@ -471,6 +498,28 @@ async function createMap() {
         grossBarLabels
             .attr("fill", "grey")
             .style("font-weight", "normal")
+    }
+
+    function hoveringBarEnd() {
+        tooltip.transition()
+            .duration(200)
+            .style("opacity", 0);
+
+        percentageBars
+            .attr("stroke", null)
+        percentageBarLabels
+            .attr("fill", "grey")
+            .style("font-weight", "normal")
+
+        grossBars
+            .attr("stroke", null)
+        grossBarLabels
+            .attr("fill", "grey")
+            .style("font-weight", "normal")
+
+        counties
+            .attr('fill', null)
+            .attr('stroke-width', null)
     }
 
     function clicked(event, d, obj) {
@@ -525,7 +574,10 @@ async function createMap() {
     let percentageBars = svg3.selectAll('rect')
         .data(originalData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
         .join('rect') //Same with the positioning of the labels rather than hardcoded pixels
+        .on('mouseover', hoveringBarStart)
+        .on('mouseout', hoveringBarEnd)
         .attr('class', 'percentage-bar')
+        .attr('cursor', 'pointer')
         .attr('x', 0)
         .attr('y', (d, i) => i * (barHeight + 4))
         .attr('width', d => barPercentageScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
@@ -539,7 +591,10 @@ async function createMap() {
     let percentageBarLabels = svg3.selectAll('text')
         .data(originalData, d => d.properties.name)
         .join('text')
+        .on('mouseover', hoveringBarStart)
+        .on('mouseout', hoveringBarEnd)
         .attr('class', 'percentage-bar-labels')
+        .attr('cursor', 'pointer')
         .attr('x', (d) => barPercentageScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
         .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
         .attr('dx', 10)
@@ -585,7 +640,10 @@ async function createMap() {
     let grossBars = svg5.selectAll('rect')
         .data(originalData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
         .join('rect') //Same with the positioning of the labels rather than hardcoded pixels
+        .on('mouseover', hoveringBarStart)
+        .on('mouseout', hoveringBarEnd)
         .attr('class', 'percapita-bar')
+        .attr('cursor', 'pointer')
         .attr('x', 0)
         .attr('y', (d, i) => i * (barHeight + 4))
         .attr('width', d => barGrossScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])]))
@@ -598,7 +656,10 @@ async function createMap() {
     let grossBarLabels = svg5.selectAll('text')
         .data(originalData, d => d.properties.name)
         .join('text')
+        .on('mouseover', hoveringBarStart)
+        .on('mouseout', hoveringBarEnd)
         .attr('class', 'percapita-bar-labels')
+        .attr('cursor', 'pointer')
         .attr('x', (d) => barGrossScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])]))
         .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
         .attr('dx', 10)
@@ -608,7 +669,7 @@ async function createMap() {
 
     const grossAxis = svg5.append('g')
         .attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`) // Control translation of % pop
-        .call(d3.axisBottom(barGrossScale).ticks(5).tickFormat(d => d/1000 + "K"))
+        .call(d3.axisBottom(barGrossScale).ticks(5).tickFormat(d => d / 1000 + "K"))
     grossAxis
         .append('text')
         .attr('text-anchor', 'start')
@@ -643,7 +704,10 @@ async function createMap() {
         percentageBars = svg3.selectAll('.percentage-bar')
             .data(newData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
             .join('rect')
+            .on('mouseover', hoveringBarStart)
+            .on('mouseout', hoveringBarEnd)
             .attr('class', 'percentage-bar')
+            .attr('cursor', 'pointer')
             .attr('x', 0)
             .attr('y', (d, i) => i * (barHeight + 4))
             .attr('width', d => barPercentageScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
@@ -657,7 +721,10 @@ async function createMap() {
         percentageBarLabels = svg3.selectAll('.percentage-bar-labels')
             .data(newData, d => d.properties.name)
             .join('text')
+            .on('mouseover', hoveringBarStart)
+            .on('mouseout', hoveringBarEnd)
             .attr('class', 'percentage-bar-labels')
+            .attr('cursor', 'pointer')
             .attr('x', (d) => barPercentageScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
             .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
             .attr('dx', 10)
@@ -670,7 +737,10 @@ async function createMap() {
         grossBars = svg5.selectAll('.percapita-bar')
             .data(newData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
             .join('rect')
+            .on('mouseover', hoveringBarStart)
+            .on('mouseout', hoveringBarEnd)
             .attr('class', 'percapita-bar')
+            .attr('cursor', 'pointer')
             .attr('x', 0)
             .attr('y', (d, i) => i * (barHeight + 4))
             .attr('width', d => barGrossScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])]))
@@ -683,7 +753,10 @@ async function createMap() {
         grossBarLabels = svg5.selectAll('.percapita-bar-labels')
             .data(newData, d => d.properties.name)
             .join('text')
+            .on('mouseover', hoveringBarStart)
+            .on('mouseout', hoveringBarEnd)
             .attr('class', 'percapita-bar-labels')
+            .attr('cursor', 'pointer')
             .attr('x', (d) => barGrossScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])]))
             .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
             .attr('dx', 10)
