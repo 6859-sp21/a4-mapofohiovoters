@@ -7,7 +7,7 @@ import json
 pd.set_option("display.max_rows", None, "display.max_columns", None)
 df = pd.read_csv('data/numRegByCity.csv', parse_dates=['REGISTRATION_DATE'], infer_datetime_format=True)
 df = df.fillna(0)
-pre16 = df[(df['REGISTRATION_DATE'] <= np.datetime64('2016-11-08'))]
+pre16 = df[(np.datetime64('1940-01-01') <= df['REGISTRATION_DATE']) & (df['REGISTRATION_DATE'] <= np.datetime64('2016-11-08'))]
 post16 = df[(np.datetime64('2016-11-08') < df['REGISTRATION_DATE']) & (df['REGISTRATION_DATE'] <= np.datetime64('2020-10-05'))]
 cumulative = pd.DataFrame(pre16.sum(axis=0))
 cumulative = cumulative.transpose()
@@ -31,7 +31,6 @@ renameMap = []
 for name in list(post16):
     renameMap.append(getCorrectString(name))
 post16.columns = renameMap
-print(list(post16))
 toKeep = set(list(post16))
 toRemove = []
 
@@ -55,5 +54,5 @@ for i in toRemove[::-1]:
 
 
 # print(original_json['features'][0]["properties"])
-with open('data/final_data_new_for_city.json', 'w') as file:
+with open('data/final_data_new_for_city_since_1940.json', 'w') as file:
     json.dump(original_json, file)

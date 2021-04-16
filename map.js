@@ -37,7 +37,7 @@ async function createMap() {
 
     // ----------- DATA -----------
     const ohioCounties = await d3.json('./data/final_data_new.json');
-    const ohioCities = await d3.json('./data/final_data_new_for_city.json');
+    const ohioCities = await d3.json('./data/final_data_new_for_city_since_1940.json');
     const countyPopulationsArray = await d3.csv('./data/population.csv');
     console.log(ohioCities)
     const countyPopulations = {};
