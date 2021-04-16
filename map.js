@@ -689,6 +689,8 @@ async function createMap() {
 
     percentageBars.call(ccBars);
     grossBars.call(ccBars);
+    percentageBarLabels.call(ccBars);
+    grossBarLabels.call(ccBars);
 
     ccBars.on('dblclick', function (e, d) {
         percentRegSelected.delete(d.properties.name);
