@@ -29,6 +29,7 @@ async function createMap() {
     const arcColorFn = d3.interpolate(d3.rgb('#ebf0ff'), d3.rgb('#5C7FEC'))
 
     const percentRegSelected = new Set(['Ottawa', 'Lawrence', 'Jefferson', 'Hamilton', 'Medina', 'Geauga', 'Delaware', 'Erie', 'Mahoning', 'Henry']);
+    const cityPercentRegSelected  = new Set(["Centerville", "Howard", "Orient", "Maineville", "Rome", "Otway", "Galena", "Batavia", "Marengo", "Proctorville"]);
 
     let currentDateIndex = 0;
     let isZoomed = "";
@@ -36,8 +37,9 @@ async function createMap() {
 
     // ----------- DATA -----------
     const ohioCounties = await d3.json('./data/final_data_new.json');
-    const ohioCities = await d3.json('./data/ohio_cities.geojson')
+    const ohioCities = await d3.json('./data/final_data_new_for_city.json')
     const countyPopulationsArray = await d3.csv('./data/population.csv');
+    console.log(ohioCities)
     const countyPopulations = {};
     for (const data of countyPopulationsArray) {
         countyPopulations[data.county] = data.population;
@@ -48,6 +50,7 @@ async function createMap() {
     let dates = Object.keys(ohioCounties.features[0].properties.registrations).map(dateString => new Date(dateString));
     dates = dates.sort((a, b) => a - b);
 
+    // cumulative sums for counties
     const cumulativeSumMap = {};
     for (const feature of ohioCounties.features) {
         const name = feature.properties.name;
@@ -82,6 +85,43 @@ async function createMap() {
         const population = countyPopulations[county]
         const registrantsPerCapita = numRegistrants / population
         const opacity = opacityScale(registrantsPerCapita)
+        return opacity
+    }
+
+    // cumulative sums for cities
+    let cityMaxRegistrantsPerCapita = 0;
+    let cityMinRegistrantsPerCapita = ohioCities.features[0].properties.registrations["11/08/2016"] / ohioCities.features[0].properties.pop_2010
+
+    const cityCumulativeSumMap = {};
+    for (const feature of ohioCities.features) {
+        const name = feature.properties.name;
+        if (feature.properties.total_registrants / feature.properties.pop_2010 > cityMaxRegistrantsPerCapita) {
+            cityMaxRegistrantsPerCapita = feature.properties.total_registrants / feature.properties.pop_2010;
+        }
+        if (feature.properties.registrations["11/08/2016"] / feature.properties.pop_2010 < cityMinRegistrantsPerCapita) {
+            cityMinRegistrantsPerCapita = feature.properties.registrations["11/08/2016"] / feature.properties.pop_2010;
+        }
+        cityCumulativeSumMap[name] = {};
+        let total = 0;
+        let maxRegistrants = 0;
+        dates.forEach((date, i) => {
+            let dateString = formatDate(date);
+            const registrants = feature.properties.registrations[dateString]
+            total += registrants
+            if (i !== 0 && registrants > maxRegistrants) {
+                maxRegistrants = registrants
+            }
+            cityCumulativeSumMap[name][dateString] = [total, feature.properties.pop_2010];
+        })
+        feature.properties.maxRegistrants = maxRegistrants;
+    }
+
+    const cityOpacityScale = d3.scaleLinear().domain([cityMinRegistrantsPerCapita, cityMaxRegistrantsPerCapita]).range([0.1, 1])
+    const cityCalculateOpacity = (date, city) => {
+        const numRegistrants = cityCumulativeSumMap[city][date][0]
+        const population = cityCumulativeSumMap[city][date][1]
+        const registrantsPerCapita = numRegistrants / population
+        const opacity = cityOpacityScale(registrantsPerCapita)
         return opacity
     }
 
@@ -390,7 +430,8 @@ async function createMap() {
             const perCapitaRegistrants = (100 * registeredVoters / pop).toFixed(3);
             tooltip.html(`<strong style="font-size: 16px;">${hoveredProperties.name}</strong><br/>Population: <strong>${pop}</strong><br/># of Registered Voters: <strong>${registeredVoters}</strong><br/>% of Pop Registered: <strong>${perCapitaRegistrants}%</strong>`);
         } else {
-            tooltip.html(`<strong style="font-size: 16px;">${hoveredProperties.name}</strong>`);
+            const pop = hoveredProperties.pop_2010;
+            tooltip.html(`<strong style="font-size: 16px;">${hoveredProperties.name}</strong><br/>Population: <strong>${pop}</strong><br/>`);
         }
     }
 
@@ -519,27 +560,34 @@ async function createMap() {
     const svg4 = d3.select("#population-graph-container")
     .append("svg")
     .attr('width', width / 4)
-    .attr('height', 100 + barHeight*percentRegSelected.size);
+    .attr('height', 100 + barHeight*cityPercentRegSelected.size);
+
+    const ordered = ohioCities.features
+        .sort((x, y) => d3.descending(
+            x.properties.total_registrants / x.properties.pop_2010,
+            y.properties.total_registrants / y.properties.pop_2010
+        ))
+        .filter(county => cityPercentRegSelected.has(county.properties.name))
 
     let percentageBarsCity = svg4.selectAll('rect')
-        .data(originalData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
+        .data(ordered, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
         .join('rect') //Same with the positioning of the labels rather than hardcoded pixels
         .attr('class', 'percentage-bar')
         .attr('x', 0)
         .attr('y', (d, i) => i * (barHeight + 4))
-        .attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
+        .attr('width', d => barScale(cityCumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])][0] / cityCumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])][1]))
         .attr('height', barHeight)
         .attr('rx', 2)
         .style('fill', '#9f67fa')
-        .style('fill-opacity', d => calculateOpacity(formatDate(startDate), d.properties.name))
+        .style('fill-opacity', d => cityCalculateOpacity(formatDate(startDate), d.properties.name))
         .attr('transform', 'translate(5, 2)')
         .attr('stroke-width', 2)
 
     let percentageBarLabelsCity = svg4.selectAll('text')
-        .data(originalData, d => d.properties.name)
+        .data(ordered, d => d.properties.name)
         .join('text')
         .attr('class', 'percentage-bar-labels')
-        .attr('x', (d) => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
+        .attr('x', (d) => barScale(cityCumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])][0] / cityCumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])][1]))
         .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
         .attr('dx', 10)
         .attr('fill', 'grey')
@@ -547,7 +595,7 @@ async function createMap() {
         .text(d => d.properties.name);
 
     const percentageAxisCity = svg4.append('g')
-        .attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`) // Control translation of % pop
+        .attr('transform', `translate(5, ${(barHeight + 4) * cityPercentRegSelected.size + 5})`) // Control translation of % pop
         .call(d3.axisBottom(barScale).tickFormat(d => d * 100))
     percentageAxisCity
         .append('text')
@@ -555,7 +603,7 @@ async function createMap() {
         .attr('fill', 'black')
         .attr('font-size', '14px')
         .attr('font-weight', 'bold')
-        .attr('x', width / 4.5 - 5) //Controls x start of % pop
+        .attr('x', width / 4.5 - 75) //Controls x start of % pop
         .attr('y', 30) //Controls y location relative to translate above
         .text('% of population registered')
 
@@ -565,7 +613,7 @@ async function createMap() {
         .attr('fill', 'black')
         .attr('font-size', '16px')
         .attr('font-weight', 'bold')
-        .text('Counties')
+        .text('Cities')
 
 //-----------------------Use of Bottom Left Graph --------------------------------------
 
