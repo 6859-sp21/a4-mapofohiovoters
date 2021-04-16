@@ -513,6 +513,7 @@ async function createMap() {
             y.properties.total_registrants / countyPopulations[y.properties.name]
         ))
         .filter(county => percentRegSelected.has(county.properties.name))
+
     let percentageBars = svg3.selectAll('rect')
         .data(originalData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
         .join('rect') //Same with the positioning of the labels rather than hardcoded pixels
