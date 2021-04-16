@@ -29,7 +29,7 @@
     }
 
     .container {
-        width: 60%;
+        width: 100vw;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -48,8 +48,11 @@
     #map-container {
         display: flex;
         flex-direction: row;
-        align-items: flex-start;
+        align-items: center;
+        justify-content: center;
         width: 65%;
+        max-width: 65%;
+        min-width: 65%;
     }
 
     #dashboard-container {
@@ -57,8 +60,10 @@
         flex-direction: column;
         flex-wrap: wrap;
         align-items: center;
-        height:auto;
+        height: auto;
         width: 35%;
+        max-width: 35%;
+        min-width: 35%;
     }
 
     #population-graph-container {
@@ -74,7 +79,7 @@
         flex-direction: row;
         align-items: center;
         width: 100%;
-        height:33%;
+        height: 33%;
     }
 
     #speedometer-container {
@@ -93,10 +98,13 @@
         align-items: center;
         padding-top: 10px;
         width: 100%;
+        max-width: 100%;
+        min-width: 100%;
         position: fixed;
         bottom: 0;
         left: 0;
         background-color: #cfcfcf;
+        z-index: 999;
     }
 
     #buttons-container {
@@ -192,7 +200,7 @@
         How many people registered in the state of Ohio between the 2016 and 2020 general elections?
     </h2>
     <br/>
-    <div>
+    <div class="container">
         <div id="slider-container">
             <div id="buttons-container">
                 <button id="play-button">Play</button>
@@ -206,6 +214,13 @@
         <div id="visualization-container">
             <div id="map-container"></div>
             <div id="dashboard-container">
+                <div style="margin-bottom: 20px; text-align: center;">
+                    <h1>Dashboard</h1>
+                    <em>
+                        Double click a county on the map to add or remove it from the bar charts, (or double click a bar
+                        directly to remove it).
+                    </em>
+                </div>
                 <div id="population-graph-container"></div>
                 <div id="speedometer-container"></div>
             </div>

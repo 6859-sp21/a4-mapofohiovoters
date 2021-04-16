@@ -1,12 +1,38 @@
 async function createMap() {
 
     // ----------- CONSTANTS & HELPERS -----------
-    const width = window.innerHeight;
-    const height = window.innerHeight * .75;
+    let mapWidth,
+        dashboardWidth,
+        barChartWidth,
+        sliderWidth,
+        height;
+
+    const resizeWindow = () => {
+        mapWidth = parseInt(d3.select('#map-container').style('width').slice(0, -2))
+        sliderWidth = parseInt(d3.select('#slider-container').style('width').slice(0, -2))
+        dashboardWidth = parseInt(d3.select('#dashboard-container').style('width').slice(0, -2))
+        barChartWidth = dashboardWidth / 2;
+        height = window.innerHeight * .75;
+    }
+
+    window.addEventListener('resize', resizeWindow);
+    resizeWindow()
+    console.log(mapWidth,
+        dashboardWidth,
+        barChartWidth,
+        sliderWidth,
+        height)
+
+
     const barHeight = 10;
     let margin = {top: 50, right: 50, bottom: 100, left: 50};
     let moving = false;
     let stepTime = 100;
+    const lightBlue = '#ebf0ff';
+    const darkBlue = '#5C7FEC';
+    const green = '#55b54f';
+    const purple = '#9f67fa';
+    const fadedPurple = '#9f67fa88'
 
     //Used to access properties of what is currently being hovered so that tooltip
     //html can be updated while playing
@@ -26,7 +52,7 @@ async function createMap() {
         return deg * Math.PI / 180;
     }
 
-    const arcColorFn = d3.interpolate(d3.rgb('#ebf0ff'), d3.rgb('#5C7FEC'))
+    const arcColorFn = d3.interpolate(d3.rgb(lightBlue), d3.rgb(darkBlue))
 
     const percentRegSelected = new Set(['Ottawa', 'Lawrence', 'Jefferson', 'Hamilton', 'Medina', 'Geauga', 'Delaware', 'Erie', 'Mahoning', 'Henry']);
     const cityPercentRegSelected = new Set(["Centerville", "Howard", "Orient", "Maineville", "Rome", "Otway", "Galena", "Batavia", "Marengo", "Proctorville"]);
@@ -79,7 +105,7 @@ async function createMap() {
     }
     const startDate = dates[0],
         endDate = dates[dates.length - 1];
-    const projection = d3.geoEquirectangular().fitExtent([[margin.left, margin.top], [width * .85 - margin.right, height - margin.bottom]], ohioCounties);
+    const projection = d3.geoEquirectangular().fitExtent([[margin.left, margin.top], [mapWidth - margin.right, height - margin.bottom]], ohioCounties);
     const path = d3.geoPath().projection(projection);
 
     const opacityScale = d3.scaleLinear().domain([minRegistrantsPerCapita, maxRegistrantsPerCapita]).range([0.1, 1])
@@ -121,17 +147,17 @@ async function createMap() {
     }
 
     // ----------- SLIDER -----------
-    const svg1 = d3.select("#slider-container")
+    const sliderSVG = d3.select("#slider-container")
         .append("svg")
-        .attr('width', width)
+        .attr('width', sliderWidth)
         .attr('height', 100);
 
     let x = d3.scaleTime()
         .domain([startDate, endDate])
-        .range([0, width - margin.right - margin.left])
+        .range([0, sliderWidth - margin.right - margin.left])
         .clamp(true);
 
-    let slider = svg1.append("g")
+    let slider = sliderSVG.append("g")
         .attr("class", "slider")
         .attr("transform", "translate(" + margin.left + "," + 50 + ")");
 
@@ -213,7 +239,7 @@ async function createMap() {
                 moving = false;
                 clearInterval(timer);
                 button
-                    .style("background-color", "#9f67fa88")
+                    .style("background-color", fadedPurple)
                     .text("Play");
             } else {
                 moving = true;
@@ -222,7 +248,7 @@ async function createMap() {
                 }
                 timer = setInterval(step, stepTime);
                 button
-                    .style("background-color", "#9f67fa")
+                    .style("background-color", purple)
                     .text("Pause");
             }
         })
@@ -231,7 +257,6 @@ async function createMap() {
     speedButtons
         .on('click', function () {
             const button = d3.select(this);
-            console.log(button.text())
             if (button.text() === '1x') {
                 stepTime = 100;
             } else if (button.text() === '2x') {
@@ -255,7 +280,7 @@ async function createMap() {
             currentDateIndex = dates.length - 1;
             clearInterval(timer);
             playButton
-                .style("background-color", "#9f67fa88")
+                .style("background-color", fadedPurple)
                 .text("Play");
         }
     }
@@ -271,18 +296,18 @@ async function createMap() {
         .scaleExtent([1, 4])
         .on('zoom', zoomed);
 
-    const svg2 = d3.select("#map-container")
+    const mapSVG = d3.select("#map-container")
         .append("svg")
-        .attr('width', width)
+        .attr('width', mapWidth)
         .attr('height', height);
     // .style('margin-right', "50px");
 
-    const ohio = svg2.append('g');
+    const ohio = mapSVG.append('g');
 
     const counties = ohio.append('g')
         .attr('stroke', '#444')
         .attr('stroke-width', 1.5)
-        .attr('fill', '#9f67fa')
+        .attr('fill', purple)
         .attr('cursor', 'pointer')
         .selectAll('path')
         .data(ohioCounties.features)
@@ -368,10 +393,10 @@ async function createMap() {
     })
 
     function reset() {
-        svg2.transition().duration(750).call(
+        mapSVG.transition().duration(750).call(
             zoom.transform,
             d3.zoomIdentity,
-            d3.zoomTransform(svg2.node()).invert([width / 2, height / 2])
+            d3.zoomTransform(mapSVG.node()).invert([mapWidth / 2, height / 2])
         )
         cities.selectAll('path')
             .data([])
@@ -526,13 +551,13 @@ async function createMap() {
         const [[x0, y0], [x1, y1]] = path.bounds(d);
         event.stopPropagation();
         counties.transition().style("fill", null);
-        svg2.transition().duration(750).call(
+        mapSVG.transition().duration(750).call(
             zoom.transform,
             d3.zoomIdentity
-                .translate(width / 2, height / 2)
-                .scale(Math.min(4, 0.9 / Math.max((x1 - x0) / width, (y1 - y0) / height)))
+                .translate(mapWidth / 2, height / 2)
+                .scale(Math.min(4, 0.9 / Math.max((x1 - x0) / mapWidth, (y1 - y0) / height)))
                 .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
-            d3.pointer(event, svg2.node())
+            d3.pointer(event, mapSVG.node())
         );
         isZoomed = d.properties.name;
         cities.selectAll('path')
@@ -554,13 +579,13 @@ async function createMap() {
     // ----------- PERCENTAGE BAR CHART -----------
     const barPercentageScale = d3.scaleLinear()
         .domain([0, 1])
-        .range([0, width / 4 - margin.right])
+        .range([0, barChartWidth - margin.right])
         .nice();
 
 
-    const svg3 = d3.select("#population-graph-container")
+    const percentageBarSVG = d3.select("#population-graph-container")
         .append("svg")
-        .attr('width', width / 4)
+        .attr('width', barChartWidth)
         .attr('height', 100 + barHeight * percentRegSelected.size);
 
     const originalData = ohioCounties.features
@@ -570,7 +595,7 @@ async function createMap() {
         ))
         .filter(county => percentRegSelected.has(county.properties.name))
 
-    let percentageBars = svg3.selectAll('rect')
+    let percentageBars = percentageBarSVG.selectAll('rect')
         .data(originalData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
         .join('rect') //Same with the positioning of the labels rather than hardcoded pixels
         .on('mouseover', hoveringBarStart)
@@ -582,12 +607,12 @@ async function createMap() {
         .attr('width', d => barPercentageScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
         .attr('height', barHeight)
         .attr('rx', 2)
-        .style('fill', '#9f67fa')
+        .style('fill', purple)
         .style('fill-opacity', d => calculateOpacity(formatDate(startDate), d.properties.name))
         .attr('transform', 'translate(5, 2)')
         .attr('stroke-width', 2)
 
-    let percentageBarLabels = svg3.selectAll('text')
+    let percentageBarLabels = percentageBarSVG.selectAll('text')
         .data(originalData, d => d.properties.name)
         .join('text')
         .on('mouseover', hoveringBarStart)
@@ -601,7 +626,7 @@ async function createMap() {
         .attr('font-size', 10)
         .text(d => d.properties.name);
 
-    const percentageAxis = svg3.append('g')
+    const percentageAxis = percentageBarSVG.append('g')
         .attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`) // Control translation of % pop
         .call(d3.axisBottom(barPercentageScale).tickFormat(d => d * 100))
     percentageAxis
@@ -610,12 +635,12 @@ async function createMap() {
         .attr('fill', 'black')
         .attr('font-size', '13px')
         .attr('font-weight', 'bold')
-        .attr('x', width / 9 - 5) //Controls x start of % pop
+        .attr('x', barChartWidth) //Controls x start of % pop
         .attr('y', 30) //Controls y location relative to translate above
         .text('% of population registered')
 
-    svg3.append('text')
-        .attr('transform', `translate(${width / 2 - margin.right}, ${10}) rotate(90)`)
+    percentageBarSVG.append('text')
+        .attr('transform', `translate(${barChartWidth - margin.right}, ${10}) rotate(90)`)
         .attr('text-anchor', 'center')
         .attr('fill', 'black')
         .attr('font-size', '16px')
@@ -625,18 +650,17 @@ async function createMap() {
 
 //-----------------------Use of Bottom Left Graph --------------------------------------
 
-    console.log(maxRegistrants)
     const barGrossScale = d3.scaleLinear()
         .domain([0, maxRegistrants])
-        .range([0, width / 4 - margin.right])
+        .range([0, barChartWidth - margin.right])
         .nice();
 
-    const svg5 = d3.select("#population-graph-container")
+    const grossBarSVG = d3.select("#population-graph-container")
         .append("svg")
-        .attr('width', width / 4)
+        .attr('width', barChartWidth)
         .attr('height', 100 + barHeight * percentRegSelected.size);
 
-    let grossBars = svg5.selectAll('rect')
+    let grossBars = grossBarSVG.selectAll('rect')
         .data(originalData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
         .join('rect') //Same with the positioning of the labels rather than hardcoded pixels
         .on('mouseover', hoveringBarStart)
@@ -648,11 +672,11 @@ async function createMap() {
         .attr('width', d => barGrossScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])]))
         .attr('height', barHeight)
         .attr('rx', 2)
-        .style('fill', '#9f67fa')
+        .style('fill', green)
         .attr('transform', 'translate(5, 2)')
         .attr('stroke-width', 2)
 
-    let grossBarLabels = svg5.selectAll('text')
+    let grossBarLabels = grossBarSVG.selectAll('text')
         .data(originalData, d => d.properties.name)
         .join('text')
         .on('mouseover', hoveringBarStart)
@@ -666,7 +690,7 @@ async function createMap() {
         .attr('font-size', 10)
         .text(d => d.properties.name);
 
-    const grossAxis = svg5.append('g')
+    const grossAxis = grossBarSVG.append('g')
         .attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`) // Control translation of % pop
         .call(d3.axisBottom(barGrossScale).ticks(5).tickFormat(d => d / 1000 + "K"))
     grossAxis
@@ -679,8 +703,8 @@ async function createMap() {
         .attr('y', 30) //Controls y location relative to translate above
         .text('# registered voters')
 
-    svg5.append('text')
-        .attr('transform', `translate(${width / 2 - margin.right}, ${10}) rotate(90)`)
+    grossBarSVG.append('text')
+        .attr('transform', `translate(${barChartWidth - margin.right}, ${10}) rotate(90)`)
         .attr('text-anchor', 'center')
         .attr('fill', 'black')
         .attr('font-size', '16px')
@@ -694,18 +718,18 @@ async function createMap() {
 
     ccBars.on('dblclick', function (e, d) {
         percentRegSelected.delete(d.properties.name);
-        svg5.attr('height', 100 + (barHeight) * percentRegSelected.size + 4 * (percentRegSelected.size - 10));
-        svg3.attr('height', 100 + (barHeight) * percentRegSelected.size + 4 * (percentRegSelected.size - 10));
+        grossBarSVG.attr('height', 100 + (barHeight) * percentRegSelected.size + 4 * (percentRegSelected.size - 10));
+        percentageBarSVG.attr('height', 100 + (barHeight) * percentRegSelected.size + 4 * (percentRegSelected.size - 10));
         const newData = ohioCounties.features
-        .sort((x, y) => {
-            return d3.descending(
-                x.properties.total_registrants / countyPopulations[x.properties.name],
-                y.properties.total_registrants / countyPopulations[y.properties.name]
-            )
-        })
-        .filter(county => percentRegSelected.has(county.properties.name));
+            .sort((x, y) => {
+                return d3.descending(
+                    x.properties.total_registrants / countyPopulations[x.properties.name],
+                    y.properties.total_registrants / countyPopulations[y.properties.name]
+                )
+            })
+            .filter(county => percentRegSelected.has(county.properties.name));
 
-        percentageBars = svg3.selectAll('.percentage-bar')
+        percentageBars = percentageBarSVG.selectAll('.percentage-bar')
             .data(newData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
             .join('rect')
             .attr('class', 'percentage-bar')
@@ -714,12 +738,12 @@ async function createMap() {
             .attr('width', d => barPercentageScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
             .attr('height', barHeight)
             .attr('rx', 2)
-            .style('fill', '#9f67fa')
+            .style('fill', purple)
             .style('fill-opacity', d => calculateOpacity(formatDate(startDate), d.properties.name))
             .attr('transform', 'translate(5, 2)')
             .attr('stroke-width', 2)
 
-        percentageBarLabels = svg3.selectAll('.percentage-bar-labels')
+        percentageBarLabels = percentageBarSVG.selectAll('.percentage-bar-labels')
             .data(newData, d => d.properties.name)
             .join('text')
             .attr('class', 'percentage-bar-labels')
@@ -732,7 +756,7 @@ async function createMap() {
 
         percentageAxis.attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`)
 
-        grossBars = svg5.selectAll('.percapita-bar')
+        grossBars = grossBarSVG.selectAll('.percapita-bar')
             .data(newData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
             .join('rect')
             .attr('class', 'percapita-bar')
@@ -741,11 +765,11 @@ async function createMap() {
             .attr('width', d => barGrossScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])]))
             .attr('height', barHeight)
             .attr('rx', 2)
-            .style('fill', '#9f67fa')
+            .style('fill', green)
             .attr('transform', 'translate(5, 2)')
             .attr('stroke-width', 2)
 
-        grossBarLabels = svg5.selectAll('.percapita-bar-labels')
+        grossBarLabels = grossBarSVG.selectAll('.percapita-bar-labels')
             .data(newData, d => d.properties.name)
             .join('text')
             .attr('class', 'percapita-bar-labels')
@@ -766,8 +790,8 @@ async function createMap() {
 
     ccCounty.on('dblclick', function (e, d) {
         (!percentRegSelected.has(d.properties.name)) ? percentRegSelected.add(d.properties.name) : percentRegSelected.delete(d.properties.name)
-        svg5.attr('height', 100 + (barHeight) * percentRegSelected.size + 4 * (percentRegSelected.size - 10));
-        svg3.attr('height', 100 + (barHeight) * percentRegSelected.size + 4 * (percentRegSelected.size - 10));
+        grossBarSVG.attr('height', 100 + (barHeight) * percentRegSelected.size + 4 * (percentRegSelected.size - 10));
+        percentageBarSVG.attr('height', 100 + (barHeight) * percentRegSelected.size + 4 * (percentRegSelected.size - 10));
         const newData = ohioCounties.features
             .sort((x, y) => {
                 return d3.descending(
@@ -777,9 +801,8 @@ async function createMap() {
             })
             .filter(county => percentRegSelected.has(county.properties.name));
 
-        
 
-        percentageBars = svg3.selectAll('.percentage-bar')
+        percentageBars = percentageBarSVG.selectAll('.percentage-bar')
             .data(newData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
             .join('rect')
             .on('mouseover', hoveringBarStart)
@@ -791,12 +814,12 @@ async function createMap() {
             .attr('width', d => barPercentageScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
             .attr('height', barHeight)
             .attr('rx', 2)
-            .style('fill', '#9f67fa')
+            .style('fill', purple)
             .style('fill-opacity', d => calculateOpacity(formatDate(startDate), d.properties.name))
             .attr('transform', 'translate(5, 2)')
             .attr('stroke-width', 2)
 
-        percentageBarLabels = svg3.selectAll('.percentage-bar-labels')
+        percentageBarLabels = percentageBarSVG.selectAll('.percentage-bar-labels')
             .data(newData, d => d.properties.name)
             .join('text')
             .on('mouseover', hoveringBarStart)
@@ -812,7 +835,7 @@ async function createMap() {
 
         percentageAxis.attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`)
 
-        grossBars = svg5.selectAll('.percapita-bar')
+        grossBars = grossBarSVG.selectAll('.percapita-bar')
             .data(newData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
             .join('rect')
             .on('mouseover', hoveringBarStart)
@@ -824,11 +847,11 @@ async function createMap() {
             .attr('width', d => barGrossScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])]))
             .attr('height', barHeight)
             .attr('rx', 2)
-            .style('fill', '#9f67fa')
+            .style('fill', green)
             .attr('transform', 'translate(5, 2)')
             .attr('stroke-width', 2)
 
-        grossBarLabels = svg5.selectAll('.percapita-bar-labels')
+        grossBarLabels = grossBarSVG.selectAll('.percapita-bar-labels')
             .data(newData, d => d.properties.name)
             .join('text')
             .on('mouseover', hoveringBarStart)
@@ -864,7 +887,7 @@ async function createMap() {
         pointerTailLength = 5,
         pointerHeadLengthPercent = 0.9;
     let range = maxAngle - minAngle;
-    const centerTx = `translate(${width / 4}, ${speedMargin + r - 20})`;
+    const centerTx = `translate(${dashboardWidth / 2}, ${speedMargin + r - 20})`;
     let pointerHeadLength = Math.round(r * pointerHeadLengthPercent);
 
     let arc = d3.arc()
@@ -881,31 +904,29 @@ async function createMap() {
 
     let pointer;
     let speedSvg;
-    console.log(width / 2)
 
     const renderSpeedometer = (newValue, countyName) => {
         speedSvg = d3.select("#speedometer-container").append('svg')
-            .attr('width', width / 2)
+            .attr('width', dashboardWidth)
             .attr('height', speedHeight + speedMargin)
+            .attr('opacity', isZoomed ? 1 : 0.5);
 
         speedSvg.append('text')
-            .attr('x', width / 4)
+            .attr('x', dashboardWidth / 2)
             .attr('y', speedMargin + speedHeight - r / 2)
             .attr('font-size', 18)
             .attr('color', '#31343d')
             .attr('text-anchor', 'middle')
             .text(countyName || "Select a county")
 
-        if (isZoomed) {
-            speedSvg.append('text')
-                .attr('x', width / 4)
-                .attr('y', speedMargin + speedHeight - r / 2)
-                .attr('dy', 20)
-                .attr('font-size', 12)
-                .attr('color', '#31343d')
-                .attr('text-anchor', 'middle')
-                .text('# registrants per day')
-        }
+        speedSvg.append('text')
+            .attr('x', dashboardWidth / 2)
+            .attr('y', speedMargin + speedHeight - r / 2)
+            .attr('dy', 20)
+            .attr('font-size', 12)
+            .attr('color', '#31343d')
+            .attr('text-anchor', 'middle')
+            .text(isZoomed ? '# registrants per day' : 'to view rate of registration')
 
         const arcs = speedSvg.append('g')
             .attr('class', 'arc')
