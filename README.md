@@ -23,16 +23,17 @@ registration, which would be more appropriate for data incorporating such a long
 exploration, we also immediately identified a need to incorporate population data for the geographical regions we would
 showcase. While someone familiar with Ohio voter engagement would have been able to interpret absolute numbers of voter
 registrations, we also wanted to make our visualization accessible to those who were not as familiar with this topic. As
-such, we knew that registration per capita was going to be an important metric to showcase from our dataset. One of the
-final data-centric design decisions we made was actually near the end of our final visualization development. As we
-began to add the ability to visualize per-capita voter registration by city (rather than by county, which had already
-been implemented), we began to see significant inconsistencies in the registration data. Particularly, we noticed
-multiple instances where voter registration data totaled to numbers higher than the population of the city in which they
-were registered. Having carefully checked that this inconsistency was rooted in the original dataset, and not a
-byproduct of a mishandled preprocessing, we have reached out to the Ohio Secretary State’s office and are awaiting more
-information on these inconsistencies. It is likely that there are a number of voters incorporated in the dataset who
-have moved out of state or passed away (and were subsequently not removed from the voting files), but we are excited
-interface with state government to learn more about the origins of the data.
+such, we knew that registration per capita was going to be an important metric to showcase from our dataset, and did so
+by utilizing data made available by the [US Census Bureau](https://data.census.gov/cedsci/). One of the final
+data-centric design decisions we made was actually near the end of our final visualization development. As we began to
+add the ability to visualize per-capita voter registration by city (rather than by county, which had already been
+implemented), we began to see significant inconsistencies in the registration data. Particularly, we noticed multiple
+instances where voter registration data totaled to numbers higher than the population of the city in which they were
+registered. Having carefully checked that this inconsistency was rooted in the original dataset, and not a byproduct of
+a mishandled preprocessing, we have reached out to the Ohio Secretary State’s office and are awaiting more information
+on these inconsistencies. It is likely that there are a number of voters incorporated in the dataset who have moved out
+of state or passed away (and were subsequently not removed from the voting files), but we are excited interface with
+state government to learn more about the origins of the data.
 
 **Design Decisions: Visualization**
 
