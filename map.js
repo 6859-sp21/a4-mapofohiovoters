@@ -39,7 +39,6 @@ async function createMap() {
     const ohioCounties = await d3.json('./data/final_data_new.json');
     const ohioCities = await d3.json('./data/final_data_new_for_city_since_1940.json');
     const countyPopulationsArray = await d3.csv('./data/population.csv');
-    console.log(ohioCities)
     const countyPopulations = {};
     for (const data of countyPopulationsArray) {
         countyPopulations[data.county] = data.population;
@@ -52,6 +51,7 @@ async function createMap() {
 
     // cumulative sums for counties
     const cumulativeSumMap = {};
+    let maxRegistrants = 0;
     for (const feature of ohioCounties.features) {
         const name = feature.properties.name;
         if (feature.properties.total_registrants / countyPopulations[name] > maxRegistrantsPerCapita) {
@@ -60,19 +60,22 @@ async function createMap() {
         if (feature.properties.registrations["11/08/2016"] / countyPopulations[name] < minRegistrantsPerCapita) {
             minRegistrantsPerCapita = feature.properties.registrations["11/08/2016"] / countyPopulations[name];
         }
+        if (feature.properties.total_registrants > maxRegistrants) {
+            maxRegistrants = feature.properties.total_registrants
+        }
         cumulativeSumMap[name] = {};
         let total = 0;
-        let maxRegistrants = 0;
+        let maxRegistrantsInner = 0;
         dates.forEach((date, i) => {
             let dateString = formatDate(date);
             const registrants = feature.properties.registrations[dateString]
             total += registrants
-            if (i !== 0 && registrants > maxRegistrants) {
-                maxRegistrants = registrants
+            if (i !== 0 && registrants > maxRegistrantsInner) {
+                maxRegistrantsInner = registrants
             }
             cumulativeSumMap[name][dateString] = total;
         })
-        feature.properties.maxRegistrants = maxRegistrants;
+        feature.properties.maxRegistrants = maxRegistrantsInner;
     }
     const startDate = dates[0],
         endDate = dates[dates.length - 1];
@@ -90,7 +93,6 @@ async function createMap() {
 
     // cumulative sums for cities
     let cityMaxRegistrantsPerCapita = 0;
-    let cityMinRegistrantsPerCapita = ohioCities.features[0].properties.registrations["11/08/2016"] / ohioCities.features[0].properties.pop_2010
 
     const cityPopulations = {};
     const cityCumulativeSumMap = {};
@@ -100,14 +102,14 @@ async function createMap() {
         if (feature.properties.total_registrants / feature.properties.pop_2010 > cityMaxRegistrantsPerCapita) {
             cityMaxRegistrantsPerCapita = feature.properties.total_registrants / feature.properties.pop_2010;
         }
-        if (feature.properties.registrations["11/08/2016"] / feature.properties.pop_2010 < cityMinRegistrantsPerCapita) {
-            cityMinRegistrantsPerCapita = feature.properties.registrations["11/08/2016"] / feature.properties.pop_2010;
-        }
         cityCumulativeSumMap[name] = {};
         let total = 0;
         let maxRegistrants = 0;
         dates.forEach((date, i) => {
             let dateString = formatDate(date);
+            if (dateString === "11/08/2016") {
+                feature.properties.registrations[dateString] = 0
+            }
             const registrants = feature.properties.registrations[dateString]
             total += registrants
             if (i !== 0 && registrants > maxRegistrants) {
@@ -116,15 +118,6 @@ async function createMap() {
             cityCumulativeSumMap[name][dateString] = total;
         })
         feature.properties.maxRegistrants = maxRegistrants;
-    }
-
-    const cityOpacityScale = d3.scaleLinear().domain([cityMinRegistrantsPerCapita, cityMaxRegistrantsPerCapita]).range([0.1, 1])
-    const cityCalculateOpacity = (date, city) => {
-        const numRegistrants = cityCumulativeSumMap[city][date]
-        const population = cityPopulations[city]
-        const registrantsPerCapita = numRegistrants / population
-        const opacity = cityOpacityScale(registrantsPerCapita)
-        return opacity
     }
 
     // ----------- SLIDER -----------
@@ -198,12 +191,15 @@ async function createMap() {
             .attr("x", x(h))
             .text(formatDate(h));
         counties.style('fill-opacity', d => calculateOpacity(formatDate(h), d.properties.name))
-        percentageBars.attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
-        percentageBars.style('fill-opacity', d => calculateOpacity(formatDate(h), d.properties.name))
-        percentageBarLabels.attr('x', d => barScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
-        percentageBarsCity.attr('width', d => barScale(cityCumulativeSumMap[d.properties.name][formatDate(h)] / cityPopulations[d.properties.name]))
-        percentageBarsCity.style('fill-opacity', d => cityCalculateOpacity(formatDate(h), d.properties.name))
-        percentageBarLabelsCity.attr('x', d => barScale(cityCumulativeSumMap[d.properties.name][formatDate(h)] / cityPopulations[d.properties.name]))
+        percentageBars
+            .attr('width', d => barPercentageScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
+            .style('fill-opacity', d => calculateOpacity(formatDate(h), d.properties.name))
+        percentageBarLabels
+            .attr('x', d => barPercentageScale(cumulativeSumMap[d.properties.name][formatDate(h)] / countyPopulations[d.properties.name]))
+        grossBars
+            .attr('width', d => barGrossScale(cumulativeSumMap[d.properties.name][formatDate(h)]))
+        grossBarLabels
+            .attr('x', d => barGrossScale(cumulativeSumMap[d.properties.name][formatDate(h)]))
         let delta = zoomedCountyData ? zoomedCountyData.properties.registrations[formatDate(dates[currentDateIndex])] : 0;
         updateSpeedometerPointer(delta)
     }
@@ -435,8 +431,7 @@ async function createMap() {
         } else {
             const pop = cityPopulations[hoveredProperties.name];
             const registeredVoters = cityCumulativeSumMap[hoveredProperties.name][formatDate(dates[currentDateIndex])];
-            const perCapitaRegistrants = (100 * registeredVoters / pop).toFixed(3);
-            tooltip.html(`<strong style="font-size: 16px;">${hoveredProperties.name}</strong><br/>Population: <strong>${pop}</strong><br/># of Registered Voters: <strong>${registeredVoters}</strong><br/>% of Pop Registered: <strong>${perCapitaRegistrants}%</strong>`);
+            tooltip.html(`<strong style="font-size: 16px;">${hoveredProperties.name}</strong><br/>Population: <strong>${pop}</strong><br/># of Registered Voters since 2016: <strong>${registeredVoters}</strong>`);
         }
     }
 
@@ -497,7 +492,7 @@ async function createMap() {
     }
 
     // ----------- PERCENTAGE BAR CHART -----------
-    const barScale = d3.scaleLinear()
+    const barPercentageScale = d3.scaleLinear()
         .domain([0, 1])
         .range([0, width / 4 - margin.right])
         .nice();
@@ -521,7 +516,7 @@ async function createMap() {
         .attr('class', 'percentage-bar')
         .attr('x', 0)
         .attr('y', (d, i) => i * (barHeight + 4))
-        .attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
+        .attr('width', d => barPercentageScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
         .attr('height', barHeight)
         .attr('rx', 2)
         .style('fill', '#9f67fa')
@@ -533,7 +528,7 @@ async function createMap() {
         .data(originalData, d => d.properties.name)
         .join('text')
         .attr('class', 'percentage-bar-labels')
-        .attr('x', (d) => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
+        .attr('x', (d) => barPercentageScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
         .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
         .attr('dx', 10)
         .attr('fill', 'grey')
@@ -542,7 +537,7 @@ async function createMap() {
 
     const percentageAxis = svg3.append('g')
         .attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`) // Control translation of % pop
-        .call(d3.axisBottom(barScale).tickFormat(d => d * 100))
+        .call(d3.axisBottom(barPercentageScale).tickFormat(d => d * 100))
     percentageAxis
         .append('text')
         // .attr('text-anchor', 'end')
@@ -561,166 +556,58 @@ async function createMap() {
         .attr('font-weight', 'bold')
         .text('Counties')
 
-//----------------------------Second Column Bar Chart Sizing --------------------------------
-
-    const svg4 = d3.select("#population-graph-container")
-        .append("svg")
-        .attr('width', width / 4)
-        .attr('height', 100 + barHeight * cityPercentRegSelected.size);
-
-    const ordered = ohioCities.features
-        .sort((x, y) => d3.descending(
-            x.properties.total_registrants / x.properties.pop_2010,
-            y.properties.total_registrants / y.properties.pop_2010
-        ))
-        .filter(county => cityPercentRegSelected.has(county.properties.name))
-
-    let percentageBarsCity = svg4.selectAll('rect')
-        .data(ordered, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
-        .join('rect') //Same with the positioning of the labels rather than hardcoded pixels
-        .attr('class', 'percentage-bar-city')
-        .attr('x', 0)
-        .attr('y', (d, i) => i * (barHeight + 4))
-        .attr('width', d => barScale(cityCumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / cityPopulations[d.properties.name]))
-        .attr('height', barHeight)
-        .attr('rx', 2)
-        .style('fill', '#9f67fa')
-        .style('fill-opacity', d => cityCalculateOpacity(formatDate(startDate), d.properties.name))
-        .attr('transform', 'translate(5, 2)')
-        .attr('stroke-width', 2)
-
-    let percentageBarLabelsCity = svg4.selectAll('text')
-        .data(ordered, d => d.properties.name)
-        .join('text')
-        .attr('class', 'percentage-bar-labels-city')
-        .attr('x', (d) => barScale(cityCumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / cityPopulations[d.properties.name]))
-        .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
-        .attr('dx', 10)
-        .attr('fill', 'grey')
-        .attr('font-size', 10)
-        .text(d => d.properties.name);
-
-    const percentageAxisCity = svg4.append('g')
-        .attr('transform', `translate(5, ${(barHeight + 4) * cityPercentRegSelected.size + 5})`) // Control translation of % pop
-        .call(d3.axisBottom(barScale).tickFormat(d => d * 100))
-    percentageAxisCity
-        .append('text')
-        // .attr('text-anchor', 'end')
-        .attr('fill', 'black')
-        .attr('font-size', '14px')
-        .attr('font-weight', 'bold')
-        .attr('x', width / 4.5 - 75) //Controls x start of % pop
-        .attr('y', 30) //Controls y location relative to translate above
-        .text('% of population registered')
-
-    svg4.append('text')
-        .attr('transform', `translate(${width / 2 - margin.right}, ${10}) rotate(90)`)
-        .attr('text-anchor', 'center')
-        .attr('fill', 'black')
-        .attr('font-size', '16px')
-        .attr('font-weight', 'bold')
-        .text('Cities')
 
 //-----------------------Use of Bottom Left Graph --------------------------------------
 
-    const svg5 = d3.select("#percapita-graph-container")
+    console.log(maxRegistrants)
+    const barGrossScale = d3.scaleLinear()
+        .domain([0, maxRegistrants])
+        .range([0, width / 4 - margin.right])
+        .nice();
+
+    const svg5 = d3.select("#population-graph-container")
         .append("svg")
         .attr('width', width / 4)
         .attr('height', 100 + barHeight * percentRegSelected.size);
 
-    let perCapitaBarsCounty = svg5.selectAll('rect')
+    let grossBars = svg5.selectAll('rect')
         .data(originalData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
         .join('rect') //Same with the positioning of the labels rather than hardcoded pixels
         .attr('class', 'percapita-bar')
         .attr('x', 0)
         .attr('y', (d, i) => i * (barHeight + 4))
-        .attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
+        .attr('width', d => barGrossScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])]))
         .attr('height', barHeight)
         .attr('rx', 2)
         .style('fill', '#9f67fa')
-        .style('fill-opacity', d => calculateOpacity(formatDate(startDate), d.properties.name))
         .attr('transform', 'translate(5, 2)')
         .attr('stroke-width', 2)
 
-    let perCapitaBarLabelsCounty = svg5.selectAll('text')
+    let grossBarLabels = svg5.selectAll('text')
         .data(originalData, d => d.properties.name)
         .join('text')
         .attr('class', 'percapita-bar-labels')
-        .attr('x', (d) => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
+        .attr('x', (d) => barGrossScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])]))
         .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
         .attr('dx', 10)
         .attr('fill', 'grey')
         .attr('font-size', 10)
         .text(d => d.properties.name);
 
-    const perCapitaAxisCounty = svg5.append('g')
+    const grossAxis = svg5.append('g')
         .attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`) // Control translation of % pop
-        .call(d3.axisBottom(barScale).tickFormat(d => d * 100))
-    perCapitaAxisCounty
+        .call(d3.axisBottom(barGrossScale).ticks(5).tickFormat(d => d/1000 + "K"))
+    grossAxis
         .append('text')
-        // .attr('text-anchor', 'end')
+        .attr('text-anchor', 'start')
         .attr('fill', 'black')
         .attr('font-size', '14px')
         .attr('font-weight', 'bold')
-        .attr('x', width / 4.5 - 5) //Controls x start of % pop
+        .attr('x', 5) //Controls x start of % pop
         .attr('y', 30) //Controls y location relative to translate above
-        .text('% of population registered')
+        .text('# registered voters')
 
     svg5.append('text')
-        .attr('transform', `translate(${width / 2 - margin.right}, ${10}) rotate(90)`)
-        .attr('text-anchor', 'center')
-        .attr('fill', 'black')
-        .attr('font-size', '16px')
-        .attr('font-weight', 'bold')
-        .text('Counties')
-
-//-----------------------------Use of Bottom Right Graph --------------------------------------------
-
-
-    const svg6 = d3.select("#percapita-graph-container")
-        .append("svg")
-        .attr('width', width / 4)
-        .attr('height', 100 + barHeight * percentRegSelected.size);
-
-    let perCapitaBarsCity = svg6.selectAll('rect')
-        .data(originalData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
-        .join('rect') //Same with the positioning of the labels rather than hardcoded pixels
-        .attr('class', 'percapita-bar-city')
-        .attr('x', 0)
-        .attr('y', (d, i) => i * (barHeight + 4))
-        .attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
-        .attr('height', barHeight)
-        .attr('rx', 2)
-        .style('fill', '#9f67fa')
-        .style('fill-opacity', d => calculateOpacity(formatDate(startDate), d.properties.name))
-        .attr('transform', 'translate(5, 2)')
-        .attr('stroke-width', 2)
-
-    let perCapitaBarLabelsCity = svg6.selectAll('text')
-        .data(originalData, d => d.properties.name)
-        .join('text')
-        .attr('class', 'percapita-bar-labels-city')
-        .attr('x', (d) => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
-        .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
-        .attr('dx', 10)
-        .attr('fill', 'grey')
-        .attr('font-size', 10)
-        .text(d => d.properties.name);
-
-    const perCapitaAxisCity = svg6.append('g')
-        .attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`) // Control translation of % pop
-        .call(d3.axisBottom(barScale).tickFormat(d => d * 100))
-    perCapitaAxisCity
-        .append('text')
-        // .attr('text-anchor', 'end')
-        .attr('fill', 'black')
-        .attr('font-size', '14px')
-        .attr('font-weight', 'bold')
-        .attr('x', width / 4.5 - 5) //Controls x start of % pop
-        .attr('y', 30) //Controls y location relative to translate above
-        .text('% of population registered')
-
-    svg6.append('text')
         .attr('transform', `translate(${width / 2 - margin.right}, ${10}) rotate(90)`)
         .attr('text-anchor', 'center')
         .attr('fill', 'black')
@@ -747,7 +634,7 @@ async function createMap() {
             .attr('class', 'percentage-bar')
             .attr('x', 0)
             .attr('y', (d, i) => i * (barHeight + 4))
-            .attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
+            .attr('width', d => barPercentageScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
             .attr('height', barHeight)
             .attr('rx', 2)
             .style('fill', '#9f67fa')
@@ -759,7 +646,7 @@ async function createMap() {
             .data(newData, d => d.properties.name)
             .join('text')
             .attr('class', 'percentage-bar-labels')
-            .attr('x', (d) => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
+            .attr('x', (d) => barPercentageScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
             .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
             .attr('dx', 10)
             .attr('fill', 'grey')
@@ -768,100 +655,31 @@ async function createMap() {
 
         percentageAxis.attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`)
 
-        perCapitaBarsCounty = svg5.selectAll('.percapita-bar')
+        grossBars = svg5.selectAll('.percapita-bar')
             .data(newData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
             .join('rect')
             .attr('class', 'percapita-bar')
             .attr('x', 0)
             .attr('y', (d, i) => i * (barHeight + 4))
-            .attr('width', d => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
+            .attr('width', d => barGrossScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])]))
             .attr('height', barHeight)
             .attr('rx', 2)
             .style('fill', '#9f67fa')
-            .style('fill-opacity', d => calculateOpacity(formatDate(startDate), d.properties.name))
             .attr('transform', 'translate(5, 2)')
             .attr('stroke-width', 2)
 
-        perCapitaBarLabelsCounty = svg5.selectAll('.percapita-bar-labels')
+        grossBarLabels = svg5.selectAll('.percapita-bar-labels')
             .data(newData, d => d.properties.name)
             .join('text')
             .attr('class', 'percapita-bar-labels')
-            .attr('x', (d) => barScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
+            .attr('x', (d) => barGrossScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])]))
             .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
             .attr('dx', 10)
             .attr('fill', 'grey')
             .attr('font-size', 10)
             .text(d => d.properties.name);
 
-        perCapitaAxisCounty.attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`)
-    });
-
-    ccCity.on('dblclick', function (e, d) {
-        (!cityPercentRegSelected.has(d.properties.name)) ? cityPercentRegSelected.add(d.properties.name) : cityPercentRegSelected.delete(d.properties.name)
-        svg6.attr('height', 100 + (barHeight) * cityPercentRegSelected.size + 4 * (cityPercentRegSelected.size - 10));
-        svg4.attr('height', 100 + (barHeight) * cityPercentRegSelected.size + 4 * (cityPercentRegSelected.size - 10));
-        const newData = ohioCities.features
-            .sort((x, y) => {
-                return d3.descending(
-                    x.properties.total_registrants / cityPopulations[x.properties.name],
-                    y.properties.total_registrants / cityPopulations[y.properties.name]
-                )
-            })
-            .filter(city => cityPercentRegSelected.has(city.properties.name));
-
-        percentageBarsCity = svg4.selectAll('.percentage-bar-city')
-            .data(newData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
-            .join('rect')
-            .attr('class', 'percentage-bar-city')
-            .attr('x', 0)
-            .attr('y', (d, i) => i * (barHeight + 4))
-            .attr('width', d => barScale(cityCumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / cityPopulations[d.properties.name]))
-            .attr('height', barHeight)
-            .attr('rx', 2)
-            .style('fill', '#9f67fa')
-            .style('fill-opacity', d => calculateOpacity(formatDate(startDate), d.properties.name))
-            .attr('transform', 'translate(5, 2)')
-            .attr('stroke-width', 2)
-
-        percentageBarLabelsCity = svg4.selectAll('.percentage-bar-labels-city')
-            .data(newData, d => d.properties.name)
-            .join('text')
-            .attr('class', 'percentage-bar-labels-city')
-            .attr('x', (d) => barScale(cityCumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / cityPopulations[d.properties.name]))
-            .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
-            .attr('dx', 10)
-            .attr('fill', 'grey')
-            .attr('font-size', 10)
-            .text(d => d.properties.name);
-
-        percentageAxisCity.attr('transform', `translate(5, ${(barHeight + 4) * cityPercentRegSelected.size + 5})`)
-
-        perCapitaBarsCity = svg6.selectAll('.percapita-bar-city')
-            .data(newData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
-            .join('rect')
-            .attr('class', 'percapita-bar-city')
-            .attr('x', 0)
-            .attr('y', (d, i) => i * (barHeight + 4))
-            .attr('width', d => barScale(cityCumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / cityPopulations[d.properties.name]))
-            .attr('height', barHeight)
-            .attr('rx', 2)
-            .style('fill', '#9f67fa')
-            .style('fill-opacity', d => calculateOpacity(formatDate(startDate), d.properties.name))
-            .attr('transform', 'translate(5, 2)')
-            .attr('stroke-width', 2)
-
-        perCapitaBarLabelsCity = svg6.selectAll('.percapita-bar-labels-city')
-            .data(newData, d => d.properties.name)
-            .join('text')
-            .attr('class', 'percapita-bar-labels-city')
-            .attr('x', (d) => barScale(cityCumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / cityPopulations[d.properties.name]))
-            .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
-            .attr('dx', 10)
-            .attr('fill', 'grey')
-            .attr('font-size', 10)
-            .text(d => d.properties.name);
-
-        perCapitaAxisCity.attr('transform', `translate(5, ${(barHeight + 4) * cityPercentRegSelected.size + 5})`)
+        grossAxis.attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`)
     });
 
     // ---------- SPEEDOMETER ----------
