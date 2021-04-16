@@ -120,8 +120,8 @@ async function createMap() {
 
     const cityOpacityScale = d3.scaleLinear().domain([cityMinRegistrantsPerCapita, cityMaxRegistrantsPerCapita]).range([0.1, 1])
     const cityCalculateOpacity = (date, city) => {
-        const numRegistrants = cityCumulativeSumMap[city][date][0]
-        const population = cityCumulativeSumMap[city][date][1]
+        const numRegistrants = cityCumulativeSumMap[city][date]
+        const population = cityPopulations[city]
         const registrantsPerCapita = numRegistrants / population
         const opacity = cityOpacityScale(registrantsPerCapita)
         return opacity
@@ -577,7 +577,7 @@ async function createMap() {
         .attr('class', 'percentage-bar')
         .attr('x', 0)
         .attr('y', (d, i) => i * (barHeight + 4))
-        .attr('width', d => barScale(cityCumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])][0] / cityCumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])][1]))
+        .attr('width', d => barScale(cityCumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / cityPopulations[d.properties.name]))
         .attr('height', barHeight)
         .attr('rx', 2)
         .style('fill', '#9f67fa')
@@ -589,7 +589,7 @@ async function createMap() {
         .data(ordered, d => d.properties.name)
         .join('text')
         .attr('class', 'percentage-bar-labels')
-        .attr('x', (d) => barScale(cityCumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])][0] / cityCumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])][1]))
+        .attr('x', (d) => barScale(cityCumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / cityPopulations[d.properties.name]))
         .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
         .attr('dx', 10)
         .attr('fill', 'grey')
