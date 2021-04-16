@@ -1,0 +1,501 @@
+rank,name,pop2021
+1,Columbus,913921
+2,Cleveland,376599
+3,Cincinnati,307266
+4,Toledo,268609
+5,Akron,197023
+6,Dayton,140343
+7,Parma,77065
+8,Canton,69837
+9,Youngstown,66687
+10,Lorain,63597
+11,Hamilton,61982
+12,Springfield,58105
+13,Kettering,54537
+14,Elyria,53677
+15,Newark,50943
+16,Dublin,49923
+17,Lakewood,49010
+18,Cuyahoga Falls,48978
+19,Middletown,48737
+20,Beavercreek,48571
+21,Mentor,47398
+22,Mansfield,46721
+23,Euclid,45908
+24,Strongsville,44436
+25,Delaware,43995
+26,Cleveland Heights,43376
+27,Westerville,42645
+28,Fairfield,42448
+29,Grove City,42314
+30,Findlay,40987
+31,Lancaster,40597
+32,Warren,39514
+33,Reynoldsburg,38549
+34,Huber Heights,38208
+35,Hilliard,36936
+36,Lima,36183
+37,North Ridgeville,35552
+38,Gahanna,35455
+39,Marion,35267
+40,Upper Arlington,35240
+41,Brunswick,34886
+42,Stow,34705
+43,Mason,34450
+44,Boardman,34431
+45,Fairborn,34240
+46,Massillon,32866
+47,Westlake,31750
+48,Bowling Green,31406
+49,North Olmsted,30955
+50,North Royalton,29836
+51,Kent,29766
+52,Austintown,28488
+53,Xenia,27385
+54,Garfield Heights,27068
+55,Troy,26739
+56,Shaker Heights,26651
+57,Wooster,26142
+58,Barberton,25773
+59,Medina,25766
+60,Green,25728
+61,Marysville,25609
+62,Riverside,25149
+63,Zanesville,25142
+64,Avon Lake,24786
+65,Wadsworth,24628
+66,Athens,24420
+67,Trotwood,24407
+68,Sandusky,24318
+69,Pickerington,24022
+70,Avon,23739
+71,Centerville,23619
+72,Oxford,23588
+73,Willoughby,23027
+74,Solon,22585
+75,Hudson,22205
+76,Perrysburg,21802
+77,Maple Heights,21766
+78,Chillicothe,21756
+79,Piqua,21696
+80,Alliance,21122
+81,South Euclid,21011
+82,Miamisburg,20605
+83,Lebanon,20529
+84,Sidney,20365
+85,Oregon,20343
+86,Ashland,20011
+87,Painesville,19952
+88,Portsmouth,19944
+89,Rocky River,19758
+90,Norwood,19648
+91,Sylvania,19531
+92,Parma Heights,19530
+93,White Oak,19271
+94,Springboro,19245
+95,Twinsburg,19044
+96,Broadview Heights,18970
+97,Whitehall,18850
+98,Berea,18573
+99,Forest Park,18493
+100,Mayfield Heights,18311
+101,Brook Park,18142
+102,Niles,17920
+103,Eastlake,17918
+104,Ashtabula,17863
+105,Tiffin,17646
+106,Steubenville,17515
+107,Tallmadge,17487
+108,New Philadelphia,17372
+109,North Canton,17026
+110,Mount Vernon,16877
+111,Norwalk,16837
+112,East Cleveland,16730
+113,Aurora,16652
+114,Defiance,16596
+115,Streetsboro,16502
+116,Pataskala,16117
+117,Fairview Park,15981
+118,Fremont,15747
+119,Middleburg Heights,15270
+120,Bay Village,15040
+121,Vandalia,14939
+122,Worthington,14684
+123,Bridgetown,14352
+124,Monroe,14307
+125,Circleville,14182
+126,New Franklin,14103
+127,Willowick,14077
+128,Washington Court House,13999
+129,Bexley,13650
+130,Sharonville,13632
+131,Brecksville,13610
+132,Maumee,13579
+133,Powell,13453
+134,Bellefontaine,13433
+135,Englewood,13403
+136,Trenton,13395
+137,Clayton,13228
+138,Fostoria,13187
+139,Lyndhurst,13178
+140,Loveland,13143
+141,Marietta,13010
+142,Monfort Heights,12962
+143,Warrensville Heights,12938
+144,Finneytown,12856
+145,West Carrollton,12790
+146,Wickliffe,12746
+147,Dover,12683
+148,University Heights,12551
+149,Blue Ash,12468
+150,Greenville,12455
+151,Conneaut,12448
+152,Harrison,12444
+153,Amherst,12423
+154,Bedford,12289
+155,Wilmington,12266
+156,Macedonia,12178
+157,Norton,11890
+158,Bucyrus,11776
+159,Seven Hills,11534
+160,Beachwood,11494
+161,Mack,11492
+162,Franklin,11482
+163,Salem,11452
+164,Urbana,11450
+165,Dent,11332
+166,Ravenna,11187
+167,Springdale,11116
+168,Heath,11102
+169,Coshocton,11043
+170,New Albany,11011
+171,Montgomery,10932
+172,Celina,10687
+173,Northbrook,10684
+174,Van Wert,10678
+175,Lincoln Village,10549
+176,Brooklyn,10502
+177,London,10436
+178,East Liverpool,10435
+179,Forestville,10415
+180,Ironton,10400
+181,Bedford Heights,10342
+182,Vermilion,10328
+183,Richmond Heights,10306
+184,Tipp City,10297
+185,Reading,10230
+186,Cambridge,10195
+187,Galion,9970
+188,Struthers,9951
+189,Blacklick Estates,9727
+190,Wapakoneta,9632
+191,Willoughby Hills,9547
+192,Louisville,9414
+193,Madeira,9299
+194,Canal Winchester,9258
+195,North College Hill,9219
+196,Beckett Ridge,9155
+197,Girard,9081
+198,Shelby,9039
+199,Oakwood,8878
+200,Sheffield Lake,8822
+201,Olmsted Falls,8742
+202,North Madison,8630
+203,Perry Heights,8575
+204,Wyoming,8558
+205,Orrville,8419
+206,Grandview Heights,8379
+207,Highland Heights,8339
+208,Bryan,8196
+209,Cheviot,8153
+210,Kenton,8146
+211,Napoleon,8107
+212,Eaton,8097
+213,St. Marys,8048
+214,Oberlin,7989
+215,Bellevue,7833
+216,Withamsville,7789
+217,Campbell,7665
+218,Dry Run,7555
+219,Fairlawn,7504
+220,Landen,7500
+221,Bellbrook,7472
+222,Wauseon,7396
+223,Mentor-on-the-Lake,7386
+224,Kenwood,7344
+225,Sunbury,7333
+226,Hubbard,7323
+227,Northridge,7278
+228,Independence,7171
+229,Union,7127
+230,Portage Lakes,7087
+231,Canfield,7078
+232,Groesbeck,7038
+233,Logan,6972
+234,Delphos,6899
+235,Milford,6837
+236,Huron,6817
+237,Kirtland,6808
+238,Mount Healthy,6702
+239,Cortland,6692
+240,Rossford,6608
+241,Hillsboro,6606
+242,Northgate,6583
+243,Rittman,6508
+244,Moraine,6466
+245,Belpre,6382
+246,Upper Sandusky,6368
+247,Martins Ferry,6359
+248,Pepper Pike,6350
+249,Columbiana,6328
+250,Covedale,6277
+251,Howland Center,6269
+252,Champion Heights,6233
+253,Jackson,6228
+254,Clyde,6154
+255,Ontario,6096
+256,Port Clinton,6094
+257,Wheelersburg,6082
+258,Fort Shawnee,6009
+259,Willard,5988
+260,Granville,5972
+261,Geneva,5891
+262,Turpin Hills,5870
+263,Brookville,5860
+264,The Village of Indian Hill,5794
+265,Groveport,5599
+266,Waterville,5597
+267,Germantown,5561
+268,New Carlisle,5548
+269,Wellston,5537
+270,Carlisle,5534
+271,Ada,5532
+272,Deer Park,5526
+273,Northwood,5480
+275,Obetz,5406
+274,Canal Fulton,5406
+276,St. Clairsville,5397
+277,Grafton,5375
+278,Apple Valley,5337
+279,Uhrichsville,5288
+280,Delhi Hills,5266
+281,Johnstown,5166
+282,Chardon,5131
+283,Nelsonville,5090
+284,New Burlington,5088
+285,Amelia,5085
+286,Munroe Falls,5051
+287,Montrose-Ghent,4986
+288,Whitehouse,4953
+289,Mount Carmel,4932
+290,Wellington,4924
+291,Plain City,4922
+292,West Milton,4912
+293,Pleasant Run,4887
+294,Toronto,4855
+295,South Lebanon,4802
+296,Reminderville,4785
+297,Cherry Grove,4747
+298,Cedarville,4738
+299,Miami Heights,4697
+300,Lexington,4694
+301,Silverton,4693
+302,Sheffield,4682
+303,New Lexington,4681
+304,Summerside,4666
+305,Coldwater,4618
+306,Greenfield,4562
+307,Ashville,4557
+308,Ottawa Hills,4530
+309,Huber Ridge,4468
+310,West Jefferson,4459
+311,Crestline,4427
+312,Newton Falls,4413
+313,Ottawa,4377
+314,East Palestine,4360
+315,Archbold,4319
+316,St. Bernard,4302
+317,Park Layne,4264
+318,Edgewood,4253
+319,Mount Repose,4249
+320,Pleasant Run Farm,4246
+321,Blanchester,4238
+322,Lake Darby,4220
+323,Georgetown,4173
+324,Waverly,4172
+325,Fruit Hill,4156
+326,Mulberry,4143
+327,Sebring,4128
+328,Bluffton,4094
+329,New Lebanon,3966
+330,Barnesville,3926
+331,Bellaire,3911
+332,Chagrin Falls,3909
+333,Montpelier,3902
+334,Swanton,3874
+335,Yellow Springs,3838
+336,Greentown,3815
+337,South Point,3809
+338,Mogadore,3803
+339,Calcutta,3755
+340,Newcomerstown,3715
+341,Mount Gilead,3706
+342,South Russell,3692
+343,Northfield,3655
+344,Richfield,3636
+345,Wintersville,3623
+346,Minerva,3602
+347,Oakwood,3584
+348,Golf Manor,3579
+349,North Baltimore,3567
+350,Gallipolis,3556
+351,Greenhills,3547
+352,Amberley,3545
+353,Carey,3524
+354,Brimfield,3513
+355,Shadyside,3497
+356,Mariemont,3492
+357,Delshire,3483
+358,Woodlawn,3466
+359,Mineral Ridge,3448
+360,Lockland,3445
+361,Dillonvale,3443
+362,Hicksville,3436
+363,Ross,3432
+364,Lake Lakengren,3405
+365,Mount Orab,3394
+367,Paulding,3383
+366,Cleves,3383
+368,Lincoln Heights,3349
+369,Sherwood,3328
+371,Orange,3326
+370,Bainbridge,3326
+372,Salem Heights,3314
+373,Moreland Hills,3311
+374,Taylor Creek,3307
+375,Mayfield,3301
+376,Waynesville,3275
+377,Wellsville,3262
+378,Four Bridges,3246
+379,Uniontown,3241
+380,Lordstown,3230
+381,West Portsmouth,3213
+382,Millersburg,3208
+383,Walbridge,3183
+384,Madison,3168
+385,West Union,3163
+386,Mingo Junction,3157
+387,Hartville,3127
+388,Beechwood Trails,3106
+389,Cadiz,3103
+390,Delta,3070
+391,Doylestown,3065
+392,Lakemore,3064
+393,Fairport Harbor,3061
+394,Richville,3054
+395,Baltimore,3014
+396,McDonald,2996
+397,Dry Ridge,2992
+398,Carrollton,2986
+399,Day Heights,2978
+400,Jefferson,2968
+401,The Plains,2946
+402,New Bremen,2937
+403,Lodi,2933
+404,Buckeye Lake,2907
+405,Bethel,2831
+406,Minster,2813
+407,North Kingsville,2768
+408,Covington,2754
+409,Sixteen Mile Stand,2746
+410,Ballville,2744
+411,LaGrange,2725
+413,New Richmond,2724
+412,Mount Healthy Heights,2724
+414,Evendale,2717
+415,Strasburg,2704
+416,Devola,2702
+417,Middlefield,2686
+418,Newtown,2681
+419,Oak Harbor,2675
+420,Lisbon,2600
+421,Richwood,2598
+422,Loudonville,2591
+423,Williamsburg,2585
+424,Dennison,2584
+425,St. Henry,2567
+426,Sabina,2547
+427,Gambier,2546
+428,Fredericktown,2541
+429,Versailles,2528
+430,Burlington,2521
+431,Hebron,2511
+432,Silver Lake,2484
+433,Crooksville,2482
+434,Gibsonburg,2474
+435,Seville,2451
+436,North Zanesville,2423
+437,Bolindale,2398
+438,New Miami,2397
+439,Wright-Patterson AFB,2387
+440,Enon,2380
+441,Middleport,2366
+442,New London,2340
+443,Poland,2336
+444,Byesville,2330
+445,Shawnee Hills,2316
+447,Wilberforce,2311
+446,West Lafayette,2311
+448,Churchill,2309
+449,Garrettsville,2299
+450,Terrace Park,2295
+451,Utica,2294
+452,Skyline Acres,2266
+453,Sugarcreek,2264
+454,Hunter,2251
+455,Genoa,2247
+456,Centerburg,2246
+457,Walton Hills,2245
+459,New Concord,2215
+458,Chesterland,2215
+460,Green Meadows,2213
+461,Elmwood Place,2205
+462,Glendale,2195
+463,Windham,2192
+464,Gates Mills,2189
+465,Creston,2176
+466,Jamestown,2174
+467,Woodsfield,2173
+469,Spencerville,2145
+468,Brewster,2145
+470,South Zanesville,2119
+471,Piketon,2114
+472,Cardington,2103
+473,Columbus Grove,2075
+474,New Boston,2073
+475,Drexel,2064
+476,Coal Grove,2054
+477,Rosemount,2053
+478,West Hill,2033
+479,St. Paris,2020
+480,Newburgh Heights,2019
+481,Leipsic,2014
+482,Lithopolis,2012
+483,Edgerton,2011
+484,Bellville,2001
+486,South Bloomfield,1999
+485,Choctaw Lake,1999
+487,Batavia,1993
+488,Woodville,1990
+489,Valley View,1989
+490,Arcanum,1982
+491,Loveland Park,1974
+492,Camden,1961
+493,Manchester,1955
+494,Masury,1921
+495,Dalton,1892
+496,Bradford,1874
+497,Lake Mohawk,1872
+498,Glenmoor,1853
+499,Five Points,1849
+500,Roseville,1843
