@@ -757,6 +757,11 @@ async function createMap() {
             .text(d => d.properties.name);
 
         grossAxis.attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`)
+
+        percentageBars.call(ccBars);
+        grossBars.call(ccBars);
+        percentageBarLabels.call(ccBars);
+        grossBarLabels.call(ccBars);
     });
 
     ccCounty.on('dblclick', function (e, d) {
@@ -838,6 +843,10 @@ async function createMap() {
             .text(d => d.properties.name);
 
         grossAxis.attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`)
+        percentageBars.call(ccBars);
+        grossBars.call(ccBars);
+        percentageBarLabels.call(ccBars);
+        grossBarLabels.call(ccBars);
     });
 
     // ---------- SPEEDOMETER ----------
