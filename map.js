@@ -1,28 +1,11 @@
 async function createMap() {
 
     // ----------- CONSTANTS & HELPERS -----------
-    let mapWidth,
-        dashboardWidth,
-        barChartWidth,
-        sliderWidth,
-        height;
-
-    const resizeWindow = () => {
-        mapWidth = parseInt(d3.select('#map-container').style('width').slice(0, -2));
-        sliderWidth = parseInt(d3.select('#slider-container').style('width').slice(0, -2)) * 0.6;
-        dashboardWidth = parseInt(d3.select('#dashboard-container').style('width').slice(0, -2));
-        barChartWidth = dashboardWidth / 2;
+    let mapWidth = parseInt(d3.select('#map-container').style('width').slice(0, -2)),
+        sliderWidth = parseInt(d3.select('#slider-container').style('width').slice(0, -2)) * 0.6,
+        dashboardWidth = parseInt(d3.select('#dashboard-container').style('width').slice(0, -2)),
+        barChartWidth = dashboardWidth / 2,
         height = window.innerHeight * .75;
-    }
-
-    window.addEventListener('resize', resizeWindow);
-    resizeWindow()
-    console.log(mapWidth,
-        dashboardWidth,
-        barChartWidth,
-        sliderWidth,
-        height)
-
 
     const barHeight = 10;
     let margin = {top: 50, right: 50, bottom: 100, left: 50};
