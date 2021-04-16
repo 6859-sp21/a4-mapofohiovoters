@@ -420,6 +420,12 @@ async function createMap() {
         percentageBarLabels
             .attr("fill", da => d.properties.name === da.properties.name ? "#444" : "grey")
             .style("font-weight", da => d.properties.name === da.properties.name ? 900 : "normal")
+
+        grossBars
+            .attr("stroke", da => d.properties.name === da.properties.name ? "#444" : null)
+        grossBarLabels
+            .attr("fill", da => d.properties.name === da.properties.name ? "#444" : "grey")
+            .style("font-weight", da => d.properties.name === da.properties.name ? 900 : "normal")
     }
 
     function updateTooltip() {
@@ -457,6 +463,12 @@ async function createMap() {
         percentageBars
             .attr("stroke", null)
         percentageBarLabels
+            .attr("fill", "grey")
+            .style("font-weight", "normal")
+
+        grossBars
+            .attr("stroke", null)
+        grossBarLabels
             .attr("fill", "grey")
             .style("font-weight", "normal")
     }
