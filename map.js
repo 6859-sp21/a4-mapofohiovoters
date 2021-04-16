@@ -361,9 +361,8 @@ async function createMap() {
     }
 
     const ccCounty = clickcancel();
-    const ccCity = clickcancel();
+    const ccBars = clickcancel();
     counties.call(ccCounty);
-    cities.call(ccCity);
     ccCounty.on('click', function (e, d) {
         (isZoomed === d.properties.name) ? reset() : clicked(e, d, this)
     })
@@ -627,6 +626,76 @@ async function createMap() {
         .attr('font-weight', 'bold')
         .text('Counties')
 
+    percentageBars.call(ccBars);
+    grossBars.call(ccBars);
+
+    ccBars.on('dblclick', function (e, d) {
+        percentRegSelected.delete(d.properties.name);
+        svg5.attr('height', 100 + (barHeight) * percentRegSelected.size + 4 * (percentRegSelected.size - 10));
+        svg3.attr('height', 100 + (barHeight) * percentRegSelected.size + 4 * (percentRegSelected.size - 10));
+        const newData = ohioCounties.features
+        .sort((x, y) => {
+            return d3.descending(
+                x.properties.total_registrants / countyPopulations[x.properties.name],
+                y.properties.total_registrants / countyPopulations[y.properties.name]
+            )
+        })
+        .filter(county => percentRegSelected.has(county.properties.name));
+
+        percentageBars = svg3.selectAll('.percentage-bar')
+            .data(newData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
+            .join('rect')
+            .attr('class', 'percentage-bar')
+            .attr('x', 0)
+            .attr('y', (d, i) => i * (barHeight + 4))
+            .attr('width', d => barPercentageScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
+            .attr('height', barHeight)
+            .attr('rx', 2)
+            .style('fill', '#9f67fa')
+            .style('fill-opacity', d => calculateOpacity(formatDate(startDate), d.properties.name))
+            .attr('transform', 'translate(5, 2)')
+            .attr('stroke-width', 2)
+
+        percentageBarLabels = svg3.selectAll('.percentage-bar-labels')
+            .data(newData, d => d.properties.name)
+            .join('text')
+            .attr('class', 'percentage-bar-labels')
+            .attr('x', (d) => barPercentageScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])] / countyPopulations[d.properties.name]))
+            .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
+            .attr('dx', 10)
+            .attr('fill', 'grey')
+            .attr('font-size', 10)
+            .text(d => d.properties.name);
+
+        percentageAxis.attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`)
+
+        grossBars = svg5.selectAll('.percapita-bar')
+            .data(newData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
+            .join('rect')
+            .attr('class', 'percapita-bar')
+            .attr('x', 0)
+            .attr('y', (d, i) => i * (barHeight + 4))
+            .attr('width', d => barGrossScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])]))
+            .attr('height', barHeight)
+            .attr('rx', 2)
+            .style('fill', '#9f67fa')
+            .attr('transform', 'translate(5, 2)')
+            .attr('stroke-width', 2)
+
+        grossBarLabels = svg5.selectAll('.percapita-bar-labels')
+            .data(newData, d => d.properties.name)
+            .join('text')
+            .attr('class', 'percapita-bar-labels')
+            .attr('x', (d) => barGrossScale(cumulativeSumMap[d.properties.name][formatDate(dates[currentDateIndex])]))
+            .attr('y', (d, i) => i * (barHeight + 4) + barHeight)
+            .attr('dx', 10)
+            .attr('fill', 'grey')
+            .attr('font-size', 10)
+            .text(d => d.properties.name);
+
+        grossAxis.attr('transform', `translate(5, ${(barHeight + 4) * percentRegSelected.size + 5})`)
+    });
+
     ccCounty.on('dblclick', function (e, d) {
         (!percentRegSelected.has(d.properties.name)) ? percentRegSelected.add(d.properties.name) : percentRegSelected.delete(d.properties.name)
         svg5.attr('height', 100 + (barHeight) * percentRegSelected.size + 4 * (percentRegSelected.size - 10));
@@ -639,6 +708,8 @@ async function createMap() {
                 )
             })
             .filter(county => percentRegSelected.has(county.properties.name));
+
+        
 
         percentageBars = svg3.selectAll('.percentage-bar')
             .data(newData, d => d.properties.name) //USE SET AT THE TOP TO HOLD SELECTED. ON DBLCLICK, ADD TO SELECTED. ON CLICK ON BAR, REMOVE. USE FILTER HERE TO FILTER THRU ELEMENTS FOR ONLY ONES CONTAINING NAME THAT IS IN SET. DONE.//Should eventually change with the number of counties / cities that we want to show
