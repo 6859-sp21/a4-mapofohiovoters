@@ -8,9 +8,9 @@ async function createMap() {
         height;
 
     const resizeWindow = () => {
-        mapWidth = parseInt(d3.select('#map-container').style('width').slice(0, -2))
-        sliderWidth = parseInt(d3.select('#slider-container').style('width').slice(0, -2))
-        dashboardWidth = parseInt(d3.select('#dashboard-container').style('width').slice(0, -2))
+        mapWidth = parseInt(d3.select('#map-container').style('width').slice(0, -2));
+        sliderWidth = parseInt(d3.select('#slider-container').style('width').slice(0, -2)) * 0.6;
+        dashboardWidth = parseInt(d3.select('#dashboard-container').style('width').slice(0, -2));
         barChartWidth = dashboardWidth / 2;
         height = window.innerHeight * .75;
     }
@@ -631,11 +631,11 @@ async function createMap() {
         .call(d3.axisBottom(barPercentageScale).tickFormat(d => d * 100))
     percentageAxis
         .append('text')
-        // .attr('text-anchor', 'end')
+        .attr('text-anchor', 'start')
         .attr('fill', 'black')
-        .attr('font-size', '13px')
+        .attr('font-size', '14px')
         .attr('font-weight', 'bold')
-        .attr('x', barChartWidth) //Controls x start of % pop
+        .attr('x', 5) //Controls x start of % pop
         .attr('y', 30) //Controls y location relative to translate above
         .text('% of population registered')
 

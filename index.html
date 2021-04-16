@@ -29,30 +29,30 @@
     }
 
     .container {
-        width: 100vw;
+        width: 90vw;
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 50px 0;
     }
 
     #visualization-container {
         display: flex;
         flex-direction: row;
+        justify-content: space-around;
         align-items: center;
-        padding: 30px;
         width: 100%;
         height: auto;
+        margin-bottom: 110px;
     }
 
     #map-container {
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        width: 65%;
-        max-width: 65%;
-        min-width: 65%;
+        width: 50%;
+        max-width: 50%;
+        min-width: 50%;
     }
 
     #dashboard-container {
@@ -61,9 +61,9 @@
         flex-wrap: wrap;
         align-items: center;
         height: auto;
-        width: 35%;
-        max-width: 35%;
-        min-width: 35%;
+        width: 40%;
+        max-width: 40%;
+        min-width: 40%;
     }
 
     #population-graph-container {
@@ -101,10 +101,17 @@
         max-width: 100%;
         min-width: 100%;
         position: fixed;
+        height: 110px;
         bottom: 0;
         left: 0;
         background-color: #cfcfcf;
         z-index: 999;
+    }
+
+    .description-container {
+        margin-bottom: 20px;
+        width: 60%;
+        text-align: center;
     }
 
     #buttons-container {
@@ -212,13 +219,21 @@
             </div>
         </div>
         <div id="visualization-container">
-            <div id="map-container"></div>
+            <div id="map-container">
+                <div class="description-container">
+                    <h1>Map</h1>
+                    <em>
+                        Hover over a county to view more details, click to select it and zoom in, or double click to add
+                        it to the dashboard
+                    </em>
+                </div>
+            </div>
             <div id="dashboard-container">
-                <div style="margin-bottom: 20px; text-align: center;">
+                <div class="description-container">
                     <h1>Dashboard</h1>
                     <em>
-                        Double click a county on the map to add or remove it from the bar charts, (or double click a bar
-                        directly to remove it).
+                        Hover over a bar to see the county in the map, or double click a bar to remove it from the
+                        dashboard
                     </em>
                 </div>
                 <div id="population-graph-container"></div>
