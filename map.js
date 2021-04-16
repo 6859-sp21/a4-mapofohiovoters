@@ -92,9 +92,11 @@ async function createMap() {
     let cityMaxRegistrantsPerCapita = 0;
     let cityMinRegistrantsPerCapita = ohioCities.features[0].properties.registrations["11/08/2016"] / ohioCities.features[0].properties.pop_2010
 
+    const cityPopulations = {};
     const cityCumulativeSumMap = {};
     for (const feature of ohioCities.features) {
         const name = feature.properties.name;
+        cityPopulations[name] = feature.properties.pop_2010;
         if (feature.properties.total_registrants / feature.properties.pop_2010 > cityMaxRegistrantsPerCapita) {
             cityMaxRegistrantsPerCapita = feature.properties.total_registrants / feature.properties.pop_2010;
         }
@@ -111,7 +113,7 @@ async function createMap() {
             if (i !== 0 && registrants > maxRegistrants) {
                 maxRegistrants = registrants
             }
-            cityCumulativeSumMap[name][dateString] = [total, feature.properties.pop_2010];
+            cityCumulativeSumMap[name][dateString] = total;
         })
         feature.properties.maxRegistrants = maxRegistrants;
     }
