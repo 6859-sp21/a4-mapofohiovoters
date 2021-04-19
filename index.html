@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ohio Voter Registration</title>
+</head>
+<style>
+    html * {
+        font-family: 'Consolas', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
+    }
+
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: #e2e4eb;
+    }
+
+    div.tooltip {
+        position: absolute;
+        width: auto;
+        height: auto;
+        padding: 8px 16px;
+        font: 12px sans-serif;
+        box-shadow: 0 0 5px #444;
+        border: 0;
+        border-radius: 8px;
+        pointer-events: none;
+    }
+
+    a {
+        color: #9f67fa;
+        text-decoration: none;
+    }
+
+    a:hover {
+        font-weight: 600;
+        color: #663783;
+    }
+
+    .container {
+        width: 90vw;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #visualization-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        width: 100%;
+        min-height: calc(100vh - 300px);
+        height: auto;
+    }
+
+    #map-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 50%;
+        max-width: 50%;
+        min-width: 50%;
+    }
+
+    #dashboard-container {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+        align-items: center;
+        height: auto;
+        width: 40%;
+        max-width: 40%;
+        min-width: 40%;
+    }
+
+    #population-graph-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        height: 33%;
+    }
+
+    #percapita-graph-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        height: 33%;
+    }
+
+    #speedometer-container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 33%;
+        margin-top: 15px;
+    }
+
+    #slider-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        padding-top: 10px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 100%;
+        position: fixed;
+        height: 110px;
+        bottom: 0;
+        left: 0;
+        background-color: #cfcfcf;
+        z-index: 999;
+    }
+
+    .description-container {
+        margin-bottom: 20px;
+        width: 60%;
+        text-align: center;
+    }
+
+    #buttons-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-right: 20px;
+    }
+
+    #play-speed-container {
+        display: flex;
+        flex-direction: row;
+    }
+
+    #play-button {
+        padding: 8px 16px;
+        margin-bottom: 10px;
+        background-color: #9f67fa88;
+    }
+
+    .speed-button {
+        opacity: 0.6;
+        margin: 0 4px;
+    }
+
+    #source-container {
+        text-align: center;
+        margin-bottom: 150px;
+        color: #888;
+        font-size: 14px;
+    }
+
+    g.pointer {
+        fill: #444;
+        stroke: black;
+    }
+
+    .ticks {
+        font-size: 10px;
+    }
+
+    .track,
+    .track-inset,
+    .track-overlay {
+        stroke-linecap: round;
+    }
+
+    .track {
+        stroke: #000;
+        stroke-opacity: 0.3;
+        stroke-width: 10px;
+
+    }
+
+    .track-inset {
+        stroke: #ddd;
+        stroke-width: 8px;
+    }
+
+    .track-overlay {
+        pointer-events: stroke;
+        stroke-width: 50px;
+        stroke: transparent;
+        cursor: pointer;
+    }
+
+    .handle {
+        fill: #fff;
+        stroke: #000;
+        stroke-opacity: 0.5;
+        stroke-width: 1.25px;
+    }
+
+    button {
+        height: min-content;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+    }
+
+    button:hover {
+        opacity: 1;
+        background-color: #9f67fa;
+        color: white;
+    }
+
+    h2 {
+        font-size: 16px;
+        font-weight: normal;
+        text-align: center;
+        font-style: italic;
+    }
+</style>
+<body>
+<div class="container">
+    <h1>
+        Ohio Voter Registration in the Last Election Cycle
+    </h1>
+    <h2>
+        How many people registered in the state of Ohio between the 2016 and 2020 general elections?
+    </h2>
+    <div class="container">
+        <div id="slider-container">
+            <div id="buttons-container">
+                <button id="play-button">Play</button>
+                <div id="play-speed-container">
+                    <button class="speed-button" style="background-color: #fa6767; opacity: 1;">1x</button>
+                    <button class="speed-button" style="background-color: #ffa866;">2x</button>
+                    <button class="speed-button" style="background-color: #00c805;">3x</button>
+                </div>
+            </div>
+        </div>
+        <div id="visualization-container">
+            <div id="map-container">
+                <div class="description-container">
+                    <h1>Map</h1>
+                    <em>
+                        Hover over a county to view more details, click to select it and zoom in, or double click to add
+                        it to the dashboard
+                    </em>
+                </div>
+            </div>
+            <div id="dashboard-container">
+                <div class="description-container">
+                    <h1>Dashboard</h1>
+                    <em>
+                        Hover over a bar to see the county in the map, or double click a bar to remove it from the
+                        dashboard
+                    </em>
+                </div>
+                <div id="population-graph-container"></div>
+                <div id="speedometer-container"></div>
+            </div>
+        </div>
+        <div id="source-container">
+            Voter registration data from
+            <a href="https://www6.ohiosos.gov/ords/f?p=VOTERFTP:STWD:::#stwdVtrFiles" target="_blank"
+               rel="noopener noreferrer">
+                Ohio Secretary of State's Voter Files Dataset
+            </a>
+            <br>
+            Population data from
+            <a href="https://data.census.gov/cedsci/" target="_blank" rel="noopener noreferrer">US Census Bureau</a>
+        </div>
+    </div>
+</div>
+</body>
+<script src="https://d3js.org/d3.v6.min.js"></script>
+<script src="map.js"></script>
+<script>
+    createMap();
+</script>
+</html>
